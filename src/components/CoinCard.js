@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrency } from '../store/slices/settingsSlice';
+import { selectIsFavourite, toggleFavourite } from '../store/slices/collectionSlice';
+import * as Haptics from 'expo-haptics';
 import { formatCurrency } from '../utils/currency';
 import { colors, spacing, borderRadius, fonts, shadows, rarityConfig } from '../theme';
 
@@ -36,6 +38,12 @@ function getMetalLabel(composition = '') {
 export function GridCoinCard({ item, onPress, onInfoPress }) {
   const { coin, condition, frontImageUri } = item;
   const currency = useSelector(selectCurrency);
+  const dispatch = useDispatch();
+  const isFavourite = useSelector(selectIsFavourite(coin.id));
+  function handleHeart() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    dispatch(toggleFavourite(coin.id));
+  }
   const displayImage = frontImageUri || coin.imageUrl;
   const [imgError, setImgError] = useState(false);
   const rarity = rarityConfig[coin.rarity] || rarityConfig.common;
@@ -70,6 +78,18 @@ export function GridCoinCard({ item, onPress, onInfoPress }) {
         <View style={[styles.metalBadge, { backgroundColor: metalStyle.bg }]}>
           <Text style={[styles.metalBadgeText, { color: metalStyle.text }]}>{metalLabel}</Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.heartBtn}
+          onPress={handleHeart}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <MaterialCommunityIcons
+            name={isFavourite ? 'heart' : 'heart-outline'}
+            size={16}
+            color={isFavourite ? colors.error : '#fff'}
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Info */}
@@ -174,6 +194,12 @@ const styles = StyleSheet.create({
   gridBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
   gridValue: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.primary },
   infoBtn:   { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  heartBtn: {
+    position: 'absolute', top: spacing.sm, right: spacing.sm,
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   // ── List card ──────────────────────────────────────────────────────────────
   card: {
