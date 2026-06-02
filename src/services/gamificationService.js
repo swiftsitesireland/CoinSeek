@@ -14,7 +14,10 @@ export async function awardXP(action, metadata = {}) {
 
 export async function awardBadge(badgeId) {
   const { data, error } = await supabase.rpc('award_badge', { p_badge_id: badgeId });
-  if (error) return { newly_earned: false };
+  if (error) {
+    console.warn('awardBadge error:', error.message);
+    return { newly_earned: false };
+  }
   return data; // { badge_id, newly_earned }
 }
 
@@ -24,6 +27,10 @@ export async function fetchGamificationData(userId) {
     supabase.from('user_badges').select('badge_id, earned_at').eq('user_id', userId),
     supabase.from('user_challenges').select('challenge_id, progress, completed_at').eq('user_id', userId),
   ]);
+
+  if (xpRes.error) console.warn('fetchGamificationData xp error:', xpRes.error.message);
+  if (badgesRes.error) console.warn('fetchGamificationData badges error:', badgesRes.error.message);
+  if (challengesRes.error) console.warn('fetchGamificationData challenges error:', challengesRes.error.message);
 
   const xpRow  = xpRes.data  ?? { total_xp: 0, week_xp: 0, level: 1 };
   const level  = xpRow.level ?? 1;
@@ -53,58 +60,59 @@ export async function fetchLeaderboard() {
 }
 
 export async function checkAndAwardBadges({ action, metadata, newTotal, level, earnedBadges, collectionSize, scanCount, countries }) {
-  const newlyEarned = [];
+  const candidates = [];
 
-  const check = async (badgeId, condition) => {
-    if (!earnedBadges.includes(badgeId) && condition) {
-      const res = await awardBadge(badgeId);
-      if (res.newly_earned) newlyEarned.push(badgeId);
-    }
+  const add = (badgeId, condition) => {
+    if (!earnedBadges.includes(badgeId) && condition) candidates.push(badgeId);
   };
 
   // Scanning milestones
-  await check('first_scan',      action === 'scan' && scanCount >= 1);
-  await check('warm_up',         action === 'scan' && scanCount >= 10);
-  await check('century_scanner', action === 'scan' && scanCount >= 100);
-  await check('scan_master',     action === 'scan' && scanCount >= 500);
+  add('first_scan',      action === 'scan' && scanCount >= 1);
+  add('warm_up',         action === 'scan' && scanCount >= 10);
+  add('century_scanner', action === 'scan' && scanCount >= 100);
+  add('scan_master',     action === 'scan' && scanCount >= 500);
 
   // Collection milestones
-  await check('starting_out',       action === 'add' && collectionSize >= 1);
-  await check('growing',            action === 'add' && collectionSize >= 10);
-  await check('serious_collector',  action === 'add' && collectionSize >= 50);
-  await check('century_collection', action === 'add' && collectionSize >= 100);
+  add('starting_out',       action === 'add' && collectionSize >= 1);
+  add('growing',            action === 'add' && collectionSize >= 10);
+  add('serious_collector',  action === 'add' && collectionSize >= 50);
+  add('century_collection', action === 'add' && collectionSize >= 100);
 
   // Geography
   const countryCount = countries?.size ?? 0;
-  await check('world_traveler', countryCount >= 5);
-  await check('global_citizen', countryCount >= 10);
-  await check('euro_explorer',  [...(countries ?? [])].filter((c) => EU_COUNTRIES.has(c)).length >= 5);
+  add('world_traveler', countryCount >= 5);
+  add('global_citizen', countryCount >= 10);
+  add('euro_explorer',  [...(countries ?? [])].filter((c) => EU_COUNTRIES.has(c)).length >= 5);
 
   // Era & material (metadata from current scan)
   if (action === 'scan' && metadata) {
-    await check('ancient_history', metadata.era === 'ancient');
-    await check('silver_age',      (metadata.composition ?? '').toLowerCase().includes('silver'));
-    await check('gold_standard',   (metadata.composition ?? '').toLowerCase().includes('gold'));
-    await check('medieval_times',  metadata.era === 'medieval');
-    await check('rare_find',       metadata.rarity === 'rare' || metadata.rarity === 'legendary');
-    await check('legendary_hunter',metadata.rarity === 'legendary');
+    add('ancient_history', metadata.era === 'ancient');
+    add('silver_age',      (metadata.composition ?? '').toLowerCase().includes('silver'));
+    add('gold_standard',   (metadata.composition ?? '').toLowerCase().includes('gold'));
+    add('medieval_times',  metadata.era === 'medieval');
+    add('rare_find',       metadata.rarity === 'rare' || metadata.rarity === 'legendary');
+    add('legendary_hunter',metadata.rarity === 'legendary');
   }
 
   // Level milestones
-  await check('level_5',  level >= 5);
-  await check('level_10', level >= 10);
-  await check('level_15', level >= 15);
-  await check('level_20', level >= 20);
+  add('level_5',  level >= 5);
+  add('level_10', level >= 10);
+  add('level_15', level >= 15);
+  add('level_20', level >= 20);
 
-  return newlyEarned;
+  if (candidates.length === 0) return [];
+
+  const results = await Promise.all(candidates.map((id) => awardBadge(id)));
+  return candidates.filter((_, i) => results[i]?.newly_earned);
 }
 
-export async function upsertChallengeProgress(challengeId, progress, completed, cycleStart) {
+export async function upsertChallengeProgress(challengeId, progress, completed, cycleStart, userId) {
   const { error } = await supabase.from('user_challenges').upsert({
+    user_id:      userId,
     challenge_id: challengeId,
     progress,
     completed_at: completed ? new Date().toISOString() : null,
     cycle_start:  cycleStart,
   }, { onConflict: 'user_id,challenge_id,cycle_start' });
-  if (error) console.warn('upsertChallengeProgress error:', error.message);
+  if (error) throw new Error(error.message);
 }
