@@ -6,13 +6,12 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { selectCollection, setCollection, selectIsFavourite, toggleFavourite } from '../store/slices/collectionSlice';
+import { selectCollection, addToCollection, selectIsFavourite, toggleFavourite } from '../store/slices/collectionSlice';
 import { selectCurrency } from '../store/slices/settingsSlice';
 import { formatCurrency, currencySymbol } from '../utils/currency';
 import { useStripePayment } from '../hooks/useStripePayment';
-import { addCoin } from '../services/coinService';
 import { useAuth } from '../auth/AuthContext';
 import { colors, spacing, borderRadius, fonts } from '../theme';
 import { saveCollection } from '../services/storage';
@@ -67,6 +66,7 @@ export default function ResultsScreen({ navigation, route }) {
   const [upgradeFeature,   setUpgradeFeature]   = useState('');
 
   const dispatch     = useDispatch();
+  const store        = useStore();
   const { user }   = useAuth();
   const collection   = useSelector(selectCollection);
   const earnedBadges = useSelector(selectBadges);
@@ -171,25 +171,20 @@ export default function ResultsScreen({ navigation, route }) {
     }
     setSaving(true);
     try {
-      const entry = {
+      // Dispatch through the slice so collectionSyncMiddleware upserts the coin
+      // to Supabase (JSONB) — the single remote-write path for collection edits.
+      dispatch(addToCollection({
         coin,
         quantity: 1,
         condition: coin.condition,
         purchasePrice: coin.estimatedValue.mid,
         notes: '',
-        dateAdded: new Date().toISOString(),
         frontImageUri: frontImageUri || null,
         backImageUri:  backImageUri  || null,
-      };
-      const saved = await addCoin(entry, user.id);
-      const updatedCollection = [saved, ...collection];
-      dispatch(setCollection(updatedCollection));
-      await saveCollection(updatedCollection);
-      if (saved.__syncPending) {
-        Toast.show({ type: 'info', text1: 'Saved locally', text2: 'No connection — will sync when online' });
-      } else {
-        Toast.show({ type: 'success', text1: 'Added to Collection', text2: coin.name });
-      }
+      }));
+      // Refresh the offline cache from the updated store state.
+      await saveCollection(store.getState().collection.items);
+      Toast.show({ type: 'success', text1: 'Added to Collection', text2: coin.name });
       handleAwardXP('add', coin);
     } catch (e) {
       Toast.show({ type: 'error', text1: 'Failed to save', text2: e.message });

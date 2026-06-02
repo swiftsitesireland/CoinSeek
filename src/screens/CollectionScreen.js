@@ -14,7 +14,7 @@ import {
 } from '../store/slices/collectionSlice';
 import { selectCurrency } from '../store/slices/settingsSlice';
 import { formatCurrency } from '../utils/currency';
-import { deleteCoin, getUserCoins } from '../services/coinService';
+import { deleteCoin, fetchUserCoins } from '../services/collectionService';
 import { loadCollection, saveCollection } from '../services/storage';
 import { useAuth } from '../auth/AuthContext';
 import { GridCoinCard } from '../components/CoinCard';
@@ -110,14 +110,16 @@ export default function CollectionScreen({ navigation }) {
     if (success) setShowUpgradeModal(false);
   }
 
-  // Load collection on mount — first try Supabase, fall back to AsyncStorage
+  // Load collection on mount — authoritative server list, else keep the cache.
   useEffect(() => {
     async function load() {
-      try {
-        if (!user?.id) return;
-        const coins = await getUserCoins(user.id);
-        if (coins.length > 0) dispatch(setCollection(coins));
-      } catch {
+      if (!user?.id) return;
+      const coins = await fetchUserCoins(user.id);
+      if (coins.length > 0) {
+        dispatch(setCollection(coins));
+        await saveCollection(coins);
+      } else {
+        // Empty/failed server read — keep whatever the local cache holds.
         const local = await loadCollection();
         if (local.length > 0) dispatch(setCollection(local));
       }
