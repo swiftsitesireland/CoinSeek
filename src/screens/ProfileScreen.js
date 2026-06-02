@@ -223,27 +223,6 @@ export default function ProfileScreen({ navigation }) {
           />
         </Section>
 
-        <Section title="COLLECTION">
-          <MenuRow
-            icon="layers-outline"
-            label="My Collection"
-            sub={`${collection.length} coins catalogued`}
-            onPress={() => navigation.navigate('Collection')}
-          />
-          <MenuRow
-            icon="chart-line"
-            label="Portfolio Value"
-            sub={`${formatCurrency(totalValue, settings.currency)} total`}
-            onPress={() => navigation.navigate('Collection')}
-          />
-          <MenuRow
-            icon="heart-outline"
-            label="Wishlist"
-            sub="Coins you're looking for"
-            onPress={() => navigation.navigate('Wishlist')}
-          />
-        </Section>
-
         <Section title="ABOUT">
           <MenuRow
             icon="database-outline"
