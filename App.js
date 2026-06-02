@@ -18,6 +18,7 @@ import { loadSettings } from './src/services/storage';
 import { AuthProvider } from './src/auth/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { paperTheme, colors } from './src/theme';
+import XPToast from './src/components/XPToast';
 
 function ToastComponent({ text1, text2, backgroundColor, borderColor }) {
   return (
@@ -88,6 +89,7 @@ export default function App() {
                   info: (props) => (
                     <ToastComponent {...props} backgroundColor="#201f1a" borderColor="#f2ca50" />
                   ),
+                  xpEarned: (props) => <XPToast {...props} />,
                 }}
               />
             </AuthProvider>
