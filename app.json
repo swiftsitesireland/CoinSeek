@@ -30,7 +30,6 @@
       },
       "package": "com.coinseek.app",
       "versionCode": 1,
-      "targetSdkVersion": 34,
       "permissions": [
         "CAMERA"
       ],
