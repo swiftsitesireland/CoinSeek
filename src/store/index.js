@@ -5,6 +5,7 @@ import settingsReducer from './slices/settingsSlice';
 import gamificationReducer from './slices/gamificationSlice';
 import { collectionSyncMiddleware } from './middleware/collectionSync';
 import { settingsPersistMiddleware } from './middleware/settingsPersist';
+import { favouritesPersistMiddleware } from './middleware/favouritesPersist';
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,5 @@ export const store = configureStore({
     gamification:  gamificationReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(collectionSyncMiddleware, settingsPersistMiddleware),
+    getDefaultMiddleware().concat(collectionSyncMiddleware, settingsPersistMiddleware, favouritesPersistMiddleware),
 });

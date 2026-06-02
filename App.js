@@ -14,7 +14,8 @@ import { useFonts, LibreCaslonText_400Regular, LibreCaslonText_700Bold } from '@
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
 import { store } from './src/store';
 import { setSettings } from './src/store/slices/settingsSlice';
-import { loadSettings } from './src/services/storage';
+import { setFavourites } from './src/store/slices/collectionSlice';
+import { loadSettings, loadFavourites } from './src/services/storage';
 import { AuthProvider } from './src/auth/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { paperTheme, colors } from './src/theme';
@@ -60,6 +61,8 @@ export default function App() {
     (async () => {
       const saved = await loadSettings();
       if (saved) store.dispatch(setSettings(saved));
+      const favIds = await loadFavourites();
+      if (favIds.length) store.dispatch(setFavourites(favIds));
     })();
   }, []);
 
