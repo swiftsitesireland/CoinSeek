@@ -56,7 +56,7 @@ export function useGamification() {
 const LEVEL_THRESHOLDS = [0,100,250,500,900,1400,2000,2800,3800,5000,6500,8500,11000,14000,17500,21500,26000,31000,37000,44000];
 
 function getXPToNextLevel(level, xp) {
-  const next = LEVEL_THRESHOLDS[level]; // threshold for level+1
-  if (!next) return 0;                  // max level
-  return next - xp;
+  const next = LEVEL_THRESHOLDS[level ?? 1];
+  if (!next) return 0;
+  return Math.max(0, next - (xp ?? 0));
 }
