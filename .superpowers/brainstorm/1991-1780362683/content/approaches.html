@@ -1,0 +1,84 @@
+<h2>3 Approaches to Gamification</h2>
+<p class="subtitle">All three layer badges, challenges, and leaderboards — but differ in depth and build cost</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #1a237e 0%, #283593 100%); padding: 20px; display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span style="background:#ffd700;color:#1a237e;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">⚡ XP System</span>
+        <span style="background:#7c4dff;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">🏆 Levels</span>
+        <span style="background:#00bcd4;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">🎯 Quests</span>
+        <span style="background:#ff5722;color:#fff;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">🥇 Leaderboard</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:12px;">
+        <div style="color:#ffd700; font-size:11px; font-weight:700; margin-bottom:6px;">COLLECTOR LEVEL 7 — SILVER HOARDER</div>
+        <div style="background:rgba(255,255,255,0.2); border-radius:4px; height:8px;">
+          <div style="background:#ffd700; width:65%; height:100%; border-radius:4px;"></div>
+        </div>
+        <div style="color:rgba(255,255,255,0.7); font-size:10px; margin-top:4px;">1,320 / 2,000 XP to next level</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Full Progression System</h3>
+      <p>XP for every action → levels with titles → badges for milestones → weekly quests → global leaderboard. The most engaging loop but the most to build. <strong>Recommended.</strong></p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Strongest daily retention</li><li>Every action feels rewarded</li><li>Viral leaderboard sharing</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Needs balance tuning</li><li>Backend XP/level tracking</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%); padding: 20px; display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span style="background:#69f0ae;color:#1b5e20;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">🏅 Badges</span>
+        <span style="background:#ffeb3b;color:#1b5e20;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">🔥 Streaks</span>
+        <span style="background:#80deea;color:#1b5e20;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">📅 Weekly Goals</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:12px; display:flex; gap:12px; justify-content:center;">
+        <div style="text-align:center; color:#fff;">
+          <div style="font-size:28px;">🔥</div>
+          <div style="font-weight:700; font-size:16px;">12</div>
+          <div style="font-size:10px; opacity:0.7;">day streak</div>
+        </div>
+        <div style="text-align:center; color:#fff;">
+          <div style="font-size:28px;">🏅</div>
+          <div style="font-weight:700; font-size:16px;">8 / 24</div>
+          <div style="font-size:10px; opacity:0.7;">badges</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Badges + Streaks (No Leaderboard)</h3>
+      <p>Milestone badges, daily scan streaks, weekly goals — all self-contained. No social comparison, no backend XP. Lighter build, still satisfying for solo collectors.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Fast to ship</li><li>No social infrastructure</li><li>Works offline</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Lower long-term retention</li><li>No viral/social loop</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%); padding: 20px; display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span style="background:#ce93d8;color:#4a148c;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">⭐ Rarity Score</span>
+        <span style="background:#fff9c4;color:#4a148c;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;">🏆 All-Time Rank</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:12px; text-align:center;">
+        <div style="color:#ffd700; font-size:32px; font-weight:700;">8,450</div>
+        <div style="color:rgba(255,255,255,0.7); font-size:11px;">Collection Rarity Score</div>
+        <div style="color:#ce93d8; font-size:11px; margin-top:4px;">Top 12% of all collectors</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Collection Score + Light Gamification</h3>
+      <p>A single "CoinSeek Score" based on rarity and variety of your collection. Grows permanently, shows your all-time rank. Minimal maintenance, no time-limited content needed.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Very simple to build</li><li>Evergreen — no content upkeep</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Weakest daily engagement</li><li>No active challenge hook</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,114 @@
+<h2>Where does gamification live?</h2>
+<p class="subtitle">The placement determines how prominent and discoverable the system feels</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1117; padding:16px; display:flex; flex-direction:column; align-items:center; gap:12px;">
+      <!-- Phone mockup -->
+      <div style="background:#1c2128; border-radius:16px; width:200px; padding:12px; border:1px solid #30363d;">
+        <!-- Screen content -->
+        <div style="background:#161b22; border-radius:8px; padding:10px; margin-bottom:8px; text-align:center;">
+          <div style="color:#ffd700; font-size:11px; font-weight:700;">LEVEL 7 · SILVER HOARDER</div>
+          <div style="background:#30363d; border-radius:4px; height:6px; margin:6px 0;">
+            <div style="background:linear-gradient(90deg,#ffd700,#ffb300); width:65%; height:100%; border-radius:4px;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-around; margin-top:8px;">
+            <div style="text-align:center;"><div style="font-size:18px;">🏅</div><div style="color:#fff;font-size:10px;">8 badges</div></div>
+            <div style="text-align:center;"><div style="font-size:18px;">🎯</div><div style="color:#fff;font-size:10px;">2 active</div></div>
+            <div style="text-align:center;"><div style="font-size:18px;">🏆</div><div style="color:#fff;font-size:10px;">#142</div></div>
+          </div>
+        </div>
+        <!-- Bottom nav -->
+        <div style="display:flex; justify-content:space-around; border-top:1px solid #30363d; padding-top:8px;">
+          <div style="text-align:center; opacity:0.5;"><div style="font-size:16px;">📷</div><div style="color:#8b949e;font-size:9px;">Scan</div></div>
+          <div style="text-align:center; opacity:0.5;"><div style="font-size:16px;">🪙</div><div style="color:#8b949e;font-size:9px;">Collection</div></div>
+          <div style="text-align:center;"><div style="font-size:16px; filter:drop-shadow(0 0 4px #ffd700);">⚡</div><div style="color:#ffd700;font-size:9px;font-weight:700;">Progress</div></div>
+          <div style="text-align:center; opacity:0.5;"><div style="font-size:16px;">👤</div><div style="color:#8b949e;font-size:9px;">Profile</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Dedicated "Progress" Tab</h3>
+      <p>Add a 4th tab to the bottom nav. Gamification gets its own full screen: XP bar, badge wall, active challenges, leaderboard all in one place. Most discoverable.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Users know exactly where to go</li><li>Full canvas for rich content</li><li>Signals it's a core feature</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Adds a tab (more nav weight)</li><li>Users must leave current screen</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1117; padding:16px; display:flex; flex-direction:column; align-items:center; gap:12px;">
+      <div style="background:#1c2128; border-radius:16px; width:200px; padding:12px; border:1px solid #30363d;">
+        <!-- Profile screen with gamification section -->
+        <div style="color:#ffd700; font-size:11px; font-weight:700; margin-bottom:8px; text-align:center;">MY PROFILE</div>
+        <div style="background:#161b22; border-radius:6px; padding:8px; margin-bottom:6px; display:flex; align-items:center; gap:8px;">
+          <div style="width:32px;height:32px;border-radius:16px;background:linear-gradient(135deg,#ffd700,#ff8f00);display:flex;align-items:center;justify-content:center;font-size:14px;">👑</div>
+          <div>
+            <div style="color:#fff;font-size:10px;font-weight:700;">Silver Hoarder</div>
+            <div style="background:#30363d;border-radius:3px;height:4px;width:80px;margin-top:3px;"><div style="background:#ffd700;width:65%;height:100%;border-radius:3px;"></div></div>
+          </div>
+        </div>
+        <div style="display:flex; gap:4px; margin-bottom:6px;">
+          <div style="flex:1;background:#161b22;border-radius:6px;padding:6px;text-align:center;"><div style="font-size:14px;">🏅</div><div style="color:#8b949e;font-size:9px;">Badges</div></div>
+          <div style="flex:1;background:#161b22;border-radius:6px;padding:6px;text-align:center;"><div style="font-size:14px;">🎯</div><div style="color:#8b949e;font-size:9px;">Quests</div></div>
+          <div style="flex:1;background:#161b22;border-radius:6px;padding:6px;text-align:center;"><div style="font-size:14px;">🏆</div><div style="color:#8b949e;font-size:9px;">Rank</div></div>
+        </div>
+        <div style="display:flex; justify-content:space-around; border-top:1px solid #30363d; padding-top:8px;">
+          <div style="text-align:center; opacity:0.5;"><div style="font-size:16px;">📷</div><div style="color:#8b949e;font-size:9px;">Scan</div></div>
+          <div style="text-align:center; opacity:0.5;"><div style="font-size:16px;">🪙</div><div style="color:#8b949e;font-size:9px;">Collection</div></div>
+          <div style="text-align:center;"><div style="font-size:16px;">👤</div><div style="color:#ffd700;font-size:9px;font-weight:700;">Profile</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Embedded in Profile Tab</h3>
+      <p>Profile screen expands to include a gamification section: level card at the top, then badges, quests, and leaderboard as sub-sections. Keeps nav clean.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>No extra tab needed</li><li>Natural home — "my stuff"</li><li>Simpler navigation</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Profile screen gets busier</li><li>Less prominent / easy to miss</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0d1117; padding:16px; display:flex; flex-direction:column; align-items:center; gap:12px;">
+      <div style="background:#1c2128; border-radius:16px; width:200px; padding:12px; border:1px solid #30363d;">
+        <!-- Scan screen with XP toast overlay -->
+        <div style="background:#161b22; border-radius:8px; padding:10px; margin-bottom:8px; text-align:center; position:relative;">
+          <div style="color:#8b949e;font-size:10px;">📷 Scan result</div>
+          <div style="color:#fff;font-size:12px;font-weight:700;margin:4px 0;">1922 Peace Dollar</div>
+          <!-- XP toast -->
+          <div style="background:linear-gradient(135deg,#1a237e,#283593);border-radius:8px;padding:6px 10px;margin-top:6px;display:flex;align-items:center;gap:6px;border:1px solid #ffd700;">
+            <span style="font-size:16px;">⚡</span>
+            <div style="text-align:left;">
+              <div style="color:#ffd700;font-size:10px;font-weight:700;">+50 XP · Rare find!</div>
+              <div style="color:rgba(255,255,255,0.7);font-size:9px;">Badge unlocked: Silver Age 🏅</div>
+            </div>
+          </div>
+        </div>
+        <!-- XP bar persistent at top -->
+        <div style="background:#161b22;border-radius:6px;padding:4px 8px;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          <div style="color:#ffd700;font-size:10px;font-weight:700;">Lv.7</div>
+          <div style="flex:1;background:#30363d;border-radius:3px;height:4px;"><div style="background:#ffd700;width:65%;height:100%;border-radius:3px;"></div></div>
+          <div style="color:#8b949e;font-size:9px;">1.3k XP</div>
+        </div>
+        <div style="display:flex; justify-content:space-around; border-top:1px solid #30363d; padding-top:8px;">
+          <div style="text-align:center; opacity:0.5;"><div style="font-size:16px;">📷</div><div style="color:#8b949e;font-size:9px;">Scan</div></div>
+          <div style="text-align:center; opacity:0.5;"><div style="font-size:16px;">🪙</div><div style="color:#8b949e;font-size:9px;">Collection</div></div>
+          <div style="text-align:center; opacity:0.5;"><div style="font-size:16px;">👤</div><div style="color:#8b949e;font-size:9px;">Profile</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Ambient + Profile Hub</h3>
+      <p>XP toasts appear inline after scans, a persistent mini XP bar lives at the top of every screen, and tapping it opens a full gamification hub modal. Discovery is organic.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Gamification feels alive everywhere</li><li>XP feedback is immediate</li><li>No nav changes needed</li></ul></div>
+        <div class="cons"><h4>Cons</h4><ul><li>Modal hub can feel buried</li><li>Mini bar takes screen space</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

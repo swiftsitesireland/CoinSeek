@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "CoinSeek",
+    "slug": "coinseek",
+    "scheme": "coinseek",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#7a4e2d"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.coinseek.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow CoinSeek to access your camera to photograph coins for identification.",
+        "NSPhotoLibraryUsageDescription": "Allow CoinSeek to access your photo library to select coin images."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#7a4e2d"
+      },
+      "package": "com.coinseek.app",
+      "versionCode": 1,
+      "targetSdkVersion": 34,
+      "permissions": [
+        "CAMERA"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "coinseek.app",
+              "pathPrefix": "/auth/callback"
+            },
+            {
+              "scheme": "https",
+              "host": "coinseek.app",
+              "pathPrefix": "/payment-success"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow CoinSeek to access your camera."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow CoinSeek to access your photos."
+        }
+      ],
+      "expo-font",
+      "expo-secure-store"
+    ]
+  }
+}
