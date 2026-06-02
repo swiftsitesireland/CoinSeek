@@ -394,9 +394,7 @@ export default function CameraScreen({ navigation }) {
         <>
           {/* Top bar */}
           <View style={[styles.topBar, { top: insets.top + 12 }]}>
-            <TouchableOpacity style={styles.topIconBtn} onPress={() => navigation.goBack()}>
-              <MaterialCommunityIcons name="arrow-left" size={22} color="#fff" />
-            </TouchableOpacity>
+            <View style={styles.topIconBtn} />
 
             <View style={{ alignItems: 'center', gap: 6 }}>
               <View style={styles.stepBadge}>
