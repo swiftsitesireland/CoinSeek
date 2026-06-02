@@ -9,7 +9,6 @@ import { useGamification } from '../hooks/useGamification';
 import { useFeatureAccess } from '../hooks/useFeatureAccess';
 import { getBadgesByCategory } from '../data/badges';
 import { getDailyChallenges, getWeeklyChallenges } from '../data/challenges';
-import { LEVEL_TITLES } from '../store/slices/gamificationSlice';
 import UpgradeModal from '../components/UpgradeModal';
 import { useStripePayment } from '../hooks/useStripePayment';
 import { colors, spacing, borderRadius, fonts } from '../theme';
