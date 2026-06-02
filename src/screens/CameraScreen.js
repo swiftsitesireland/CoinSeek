@@ -49,7 +49,7 @@ export default function CameraScreen({ navigation }) {
 
   const {
     scansUsed, scansRemaining, limitReached,
-    maxScans, incrementScan, resetLabel, isPremium,
+    maxScans, syncScansRemaining, resetLabel, isPremium,
   } = useScanLimit();
   const { startPayment, paymentLoading } = useStripePayment();
 
@@ -155,9 +155,9 @@ export default function CameraScreen({ navigation }) {
     );
     try {
       const result = await identifyCoin(frontUri, backUri);
-      // Consume the scan only after a successful API response so a network
-      // error or server failure does not silently burn the user's free scan.
-      await incrementScan();
+      // Reflect the server's authoritative remaining count (set by the edge
+      // function) instead of a blind local increment.
+      await syncScansRemaining(result.scansRemaining);
       clearInterval(interval);
       setProgress(100);
       const entry = {

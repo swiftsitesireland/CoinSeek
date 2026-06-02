@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { useDispatch, useSelector } from 'react-redux';
+import { supabase } from '../config/supabase';
 import { selectIsPremium, setScansUsedToday } from '../store/slices/settingsSlice';
+import {
+  MAX_FREE_SCANS, usedFromRemaining, msUntilUtcMidnight, utcDateKey,
+} from './scanLimitHelpers';
 
-// Stored in SecureStore (not AsyncStorage) so it survives "Clear All Data"
-// which only wipes AsyncStorage. The server-side check_and_increment_daily_scan
-// RPC is the authoritative guard — this local counter only drives the UI.
-// On reinstall the local counter resets to 0, but the server still enforces
-// the limit, so users will see "scans remaining" reset visually but be blocked
-// by the server after 3 scans regardless.
+// SecureStore is now only an OFFLINE CACHE. The server (get_daily_scan_status /
+// the identify-coin response) is the source of truth, fetched on mount like XP.
 const SCAN_KEY = '@coinseek_scan_data';
-export const MAX_FREE_SCANS = 3;
+
+// Re-exported for consumers (e.g. ScanLimitModal) that import it from this hook.
+export { MAX_FREE_SCANS, usedFromRemaining, msUntilUtcMidnight };
 
 export function useScanLimit() {
   const dispatch  = useDispatch();
@@ -19,36 +21,52 @@ export function useScanLimit() {
   const [scansUsed, setScansUsed] = useState(0);
   const [loaded,    setLoaded]    = useState(false);
 
-  const today = new Date().toDateString();
+  function applyUsed(used) {
+    setScansUsed(used);
+    dispatch(setScansUsedToday(used));
+  }
 
-  // Load persisted count on mount; reset if it's a new day
+  async function cacheUsed(used) {
+    try {
+      await SecureStore.setItemAsync(SCAN_KEY, JSON.stringify({ date: utcDateKey(), count: used }));
+    } catch (_) {}
+  }
+
+  // On mount: ask the server (authoritative), fall back to the cache offline.
   useEffect(() => {
+    let cancelled = false;
     async function load() {
       try {
-        const raw  = await SecureStore.getItemAsync(SCAN_KEY);
-        const data = raw ? JSON.parse(raw) : null;
-        if (data?.date === today) {
-          setScansUsed(data.count);
-          dispatch(setScansUsedToday(data.count));
-        } else {
-          setScansUsed(0);
-          dispatch(setScansUsedToday(0));
-          await SecureStore.setItemAsync(SCAN_KEY, JSON.stringify({ date: today, count: 0 }));
-        }
-      } catch (_) {}
-      setLoaded(true);
+        const { data, error } = await supabase.rpc('get_daily_scan_status');
+        if (error) throw error;
+        if (cancelled) return;
+        const used = usedFromRemaining(
+          data?.scan_limit ?? MAX_FREE_SCANS,
+          data?.scans_remaining ?? MAX_FREE_SCANS,
+        );
+        applyUsed(used);
+        await cacheUsed(used);
+      } catch (_) {
+        // Offline: trust today's cached value, else 0.
+        try {
+          const raw   = await SecureStore.getItemAsync(SCAN_KEY);
+          const cache = raw ? JSON.parse(raw) : null;
+          if (!cancelled) applyUsed(cache?.date === utcDateKey() ? cache.count : 0);
+        } catch (_) { if (!cancelled) applyUsed(0); }
+      }
+      if (!cancelled) setLoaded(true);
     }
     load();
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function incrementScan() {
-    if (isPremium) return; // premium users have no limit
-    const next = scansUsed + 1;
-    setScansUsed(next);
-    dispatch(setScansUsedToday(next));
-    try {
-      await SecureStore.setItemAsync(SCAN_KEY, JSON.stringify({ date: today, count: next }));
-    } catch (_) {}
+  /** Reflect the server's post-scan remaining count (from identifyCoin). */
+  async function syncScansRemaining(remaining) {
+    if (isPremium || remaining == null) return;
+    const used = usedFromRemaining(MAX_FREE_SCANS, remaining);
+    applyUsed(used);
+    await cacheUsed(used);
   }
 
   const scansRemaining = isPremium
@@ -57,13 +75,9 @@ export function useScanLimit() {
 
   const limitReached = !isPremium && scansUsed >= MAX_FREE_SCANS;
 
-  // Time until midnight reset
-  const now       = new Date();
-  const midnight  = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  const msLeft    = midnight - now;
-  const hLeft     = Math.floor(msLeft / 3_600_000);
-  const mLeft     = Math.floor((msLeft % 3_600_000) / 60_000);
+  const msLeft = msUntilUtcMidnight(new Date());
+  const hLeft  = Math.floor(msLeft / 3_600_000);
+  const mLeft  = Math.floor((msLeft % 3_600_000) / 60_000);
   const resetLabel = hLeft > 0 ? `${hLeft}h ${mLeft}m` : `${mLeft}m`;
 
   return {
@@ -71,7 +85,7 @@ export function useScanLimit() {
     scansRemaining,
     limitReached,
     maxScans: MAX_FREE_SCANS,
-    incrementScan,
+    syncScansRemaining,
     loaded,
     resetLabel,
     isPremium,
