@@ -18,7 +18,6 @@ import PrivacyPolicyScreen         from '../screens/PrivacyPolicyScreen';
 import PrivacySecurityScreen       from '../screens/PrivacySecurityScreen';
 import TermsOfServiceScreen        from '../screens/TermsOfServiceScreen';
 import HistoryScreen               from '../screens/HistoryScreen';
-import WishlistScreen              from '../screens/WishlistScreen';
 import OnboardingScreen            from '../screens/OnboardingScreen';
 import LoginScreen                 from '../screens/auth/LoginScreen';
 import SignupScreen                from '../screens/auth/SignupScreen';
@@ -86,7 +85,6 @@ function ProfileStack() {
       <S.Screen name="TermsOfService"  component={TermsOfServiceScreen} />
       <S.Screen name="PrivacySecurity" component={PrivacySecurityScreen} />
       <S.Screen name="History"         component={HistoryScreen} />
-      <S.Screen name="Wishlist"        component={WishlistScreen} />
     </S.Navigator>
   );
 }
