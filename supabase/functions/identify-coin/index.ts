@@ -5,8 +5,11 @@ import {
   payloadTooLarge, internalError, buildCorsHeaders,
 } from '../_shared/validate.ts';
 
+// gemini-1.5-flash and gemini-2.0-flash are both retired (1.5 shut down Sep 2025,
+// 2.0 shut down Jun 1 2026) and return 404 on generateContent. gemini-2.5-flash
+// is the current GA fast model.
 const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
 // VULN-04: 10 MB limit — two base64 images won't exceed this; prevents oversized blobs
 const IMAGE_BODY_LIMIT = 10_485_760;
@@ -235,7 +238,14 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts }],
-        generationConfig: { temperature: 0.1, maxOutputTokens: 1024 },
+        generationConfig: {
+          temperature: 0.1,
+          // 2.5 Flash enables "thinking" by default, which would consume the
+          // output budget and can return empty text. Disable it and give the
+          // JSON response enough headroom so it isn't truncated (→ parse error).
+          maxOutputTokens: 2048,
+          thinkingConfig: { thinkingBudget: 0 },
+        },
       }),
     });
 
