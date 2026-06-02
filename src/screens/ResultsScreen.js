@@ -20,6 +20,8 @@ import { useFeatureAccess } from '../hooks/useFeatureAccess';
 import BlurOverlay from '../components/BlurOverlay';
 import UpgradeModal from '../components/UpgradeModal';
 import Toast from 'react-native-toast-message';
+import { selectBadges, setGamification, addEarnedBadge, LEVEL_TITLES } from '../store/slices/gamificationSlice';
+import { awardXP, checkAndAwardBadges } from '../services/gamificationService';
 
 const { width } = Dimensions.get('window');
 
@@ -50,10 +52,11 @@ export default function ResultsScreen({ navigation, route }) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature,   setUpgradeFeature]   = useState('');
 
-  const dispatch   = useDispatch();
+  const dispatch     = useDispatch();
   const { user }   = useAuth();
-  const collection = useSelector(selectCollection);
-  const wishlist   = useSelector(selectWishlist);
+  const collection   = useSelector(selectCollection);
+  const earnedBadges = useSelector(selectBadges);
+  const wishlist     = useSelector(selectWishlist);
   const currency   = useSelector(selectCurrency);
   const isInWishlist = useSelector(selectIsInWishlist(result?.coin?.id));
 
@@ -90,6 +93,65 @@ export default function ResultsScreen({ navigation, route }) {
   const metal        = METAL_LABEL_MAP(coin.composition);
 
   const isInCollection = collection.some(i => i.coin.id === coin.id);
+
+  function fireXPToast(xpEarned, newTotal, levelAfter, badgeId) {
+    Toast.show({
+      type:           'xpEarned',
+      position:       'bottom',
+      visibilityTime: 3000,
+      props: {
+        xp:      xpEarned,
+        badgeId: badgeId ?? null,
+        newTotal,
+        level:   levelAfter,
+      },
+    });
+  }
+
+  async function handleAwardXP(action, coinData) {
+    try {
+      const xpResult = await awardXP(action, {
+        rarity:      coinData?.rarity,
+        era:         coinData?.era,
+        country:     coinData?.country,
+        composition: coinData?.composition,
+      });
+
+      dispatch(setGamification({
+        xp:        xpResult.new_total,
+        weekXp:    xpResult.new_week_xp,
+        level:     xpResult.level_after,
+        levelTitle: LEVEL_TITLES[xpResult.level_after] ?? 'Pocket Change',
+      }));
+
+      const countries = new Set(collection.map((i) => i.coin?.country).filter(Boolean));
+      if (coinData?.country) countries.add(coinData.country);
+
+      const newBadges = await checkAndAwardBadges({
+        action,
+        metadata:       { rarity: coinData?.rarity, era: coinData?.era, composition: coinData?.composition },
+        newTotal:       xpResult.new_total,
+        level:          xpResult.level_after,
+        earnedBadges,
+        collectionSize: collection.length + (action === 'add' ? 1 : 0),
+        scanCount:      0,
+        countries,
+      });
+
+      newBadges.forEach((id) => dispatch(addEarnedBadge(id)));
+      fireXPToast(xpResult.xp_earned, xpResult.new_total, xpResult.level_after, newBadges[0] ?? null);
+    } catch (e) {
+      console.warn('handleAwardXP error:', e.message);
+    }
+  }
+
+  const xpFiredRef = React.useRef(false);
+  React.useEffect(() => {
+    if (coin && !xpFiredRef.current) {
+      xpFiredRef.current = true;
+      handleAwardXP('scan', coin);
+    }
+  }, []);
 
   function handleUpgradeFor(featureName) {
     setUpgradeFeature(featureName);
@@ -129,6 +191,7 @@ export default function ResultsScreen({ navigation, route }) {
       } else {
         Toast.show({ type: 'success', text1: 'Added to Collection', text2: coin.name });
       }
+      handleAwardXP('add', coin);
     } catch (e) {
       Toast.show({ type: 'error', text1: 'Failed to save', text2: e.message });
     } finally {
