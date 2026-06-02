@@ -10,7 +10,37 @@
 
 **Spec:** `docs/superpowers/specs/2026-06-02-account-data-persistence-design.md`
 
-**Branch:** `feature/account-persistence`
+**Branch:** `feature/account-persistence-impl`
+
+---
+
+## Reconciliation amendment (post-favourites merge, 2026-06-02)
+
+The favourites feature merged to master before implementation and added
+`collectionSyncMiddleware` (`src/store/middleware/collectionSync.js`), which already
+routes `addToCollection` / `updateCollectionItem` / `removeFromCollection` →
+`collectionService.upsertCoin` / `deleteCoin` (JSONB). That middleware is now the
+single remote-write path for collection mutations. The plan below is adjusted to
+build on it. Where this amendment conflicts with a task body, the amendment wins.
+
+- **Task 1:** `user_coins.id` is **TEXT** (client-generated ids from the slice's
+  `localId()`), **not UUID** — a server-generated UUID PK would break the middleware's
+  client-id upserts. Drop `gen_random_uuid()`; keep JSONB `coin` + RLS.
+- **Task 3:** Do **not** remove `upsertCoin` (middleware depends on it) and do **not**
+  add `addCoin` / `flushPendingLocalCoins` / `local_` logic. Keep the existing
+  `upsertCoin`, `deleteCoin`, `fetchUserCoins`; only **add** the pure
+  `mergeCollections(remote, local)` helper + its test. `itemToRow` keeps `id`.
+- **Task 4:** `useCollectionSync` — load cache, fetch remote, `mergeCollections`,
+  re-`upsertCoin` any local-only items (cache ids missing from remote), dispatch
+  merged, `saveCollection`. (No `local_` flush mapping — ids are stable.)
+- **Task 5:** `ResultsScreen.handleAdd` — replace `addCoin`(coinService) + `setCollection`
+  with `dispatch(addToCollection(entry))` (middleware upserts JSONB), then
+  `saveCollection` from new state; keep XP + success toast; drop the `__syncPending`
+  branch and the `addCoin` import. `CollectionScreen` — repoint `deleteCoin` import to
+  `collectionService` and replace the `getUserCoins` load with `fetchUserCoins` + cache
+  fallback.
+- **Tasks 2, 6, 7 (scan count):** unchanged — favourites did not touch them.
+- **Task 8:** unchanged — delete `coinService.js` once the two screens stop importing it.
 
 ---
 
