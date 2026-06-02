@@ -22,6 +22,10 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Claude Code & Superpowers tool state
+.claude/settings.local.json
+.superpowers/
+
 # Native builds
 android/
 ios/
