@@ -32,6 +32,20 @@ function itemToRow(userId, item) {
   };
 }
 
+/**
+ * Merge server rows with any local-only items (coins added while offline that
+ * haven't synced yet) so a successful-but-empty server read never drops them.
+ * Ids are stable client ids, so an item missing from `remote` is local-only.
+ * Pure + side-effect free for testability.
+ */
+export function mergeCollections(remote, local) {
+  const r = Array.isArray(remote) ? remote : [];
+  const l = Array.isArray(local)  ? local  : [];
+  const remoteIds = new Set(r.map((i) => i.id));
+  const localOnly = l.filter((i) => !remoteIds.has(i.id));
+  return [...r, ...localOnly];
+}
+
 /** Fetch all coins for a user. Returns [] on error (graceful fallback). */
 export async function fetchUserCoins(userId) {
   const { data, error } = await supabase
