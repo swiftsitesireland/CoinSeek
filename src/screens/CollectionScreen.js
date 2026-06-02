@@ -10,7 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   selectCollection, selectCollectionTotal,
-  removeFromCollection, setCollection,
+  removeFromCollection, setCollection, selectFavourites,
 } from '../store/slices/collectionSlice';
 import { selectCurrency } from '../store/slices/settingsSlice';
 import { formatCurrency } from '../utils/currency';
@@ -87,6 +87,8 @@ export default function CollectionScreen({ navigation }) {
   const collection = useSelector(selectCollection);
   const totalValue = useSelector(selectCollectionTotal);
   const currency   = useSelector(selectCurrency);
+  const favourites = useSelector(selectFavourites);
+  const [favouritesOnly, setFavouritesOnly] = useState(false);
 
   const [search,           setSearch]           = useState('');
   const [activeFilter,     setActiveFilter]     = useState(null);
@@ -125,6 +127,9 @@ export default function CollectionScreen({ navigation }) {
 
   const filtered = useMemo(() => {
     let r = collection;
+    if (favouritesOnly) {
+      r = r.filter((i) => favourites.includes(i.coin.id));
+    }
     if (search) {
       const q = search.toLowerCase();
       r = r.filter(i =>
@@ -139,7 +144,7 @@ export default function CollectionScreen({ navigation }) {
       r = [...r].sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
     }
     return r;
-  }, [collection, search, activeFilter]);
+  }, [collection, search, activeFilter, favouritesOnly, favourites]);
 
   async function handleRemove(item) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -161,7 +166,7 @@ export default function CollectionScreen({ navigation }) {
     ]);
   }
 
-  useEffect(() => { setShowAll(false); }, [search, activeFilter]);
+  useEffect(() => { setShowAll(false); }, [search, activeFilter, favouritesOnly]);
 
   function toggleFilter(id) {
     setActiveFilter(v => v === id ? null : id);
@@ -248,6 +253,18 @@ export default function CollectionScreen({ navigation }) {
 
       {/* ── Filter chips ────────────────────────────────────────────── */}
       <View style={styles.chipsRow}>
+        <TouchableOpacity
+          style={[styles.chip, favouritesOnly && styles.chipActive]}
+          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setFavouritesOnly(v => !v); }}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons
+            name={favouritesOnly ? 'heart' : 'heart-outline'}
+            size={13}
+            color={favouritesOnly ? colors.onPrimary : colors.textMuted}
+          />
+          <Text style={[styles.chipText, favouritesOnly && styles.chipTextActive]}>Favourites</Text>
+        </TouchableOpacity>
         {FILTER_CHIPS.map(c => (
           <FilterChip
             key={c.id}
@@ -320,11 +337,19 @@ export default function CollectionScreen({ navigation }) {
         renderItem={renderGridItem}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <MaterialCommunityIcons name="layers-outline" size={64} color={colors.outlineVariant} />
-            <Text style={styles.emptyTitle}>No coins yet</Text>
-            <Text style={styles.emptySub}>Scan a coin to add it to your collection</Text>
-          </View>
+          favouritesOnly ? (
+            <View style={styles.empty}>
+              <MaterialCommunityIcons name="heart-outline" size={64} color={colors.outlineVariant} />
+              <Text style={styles.emptyTitle}>No favourites yet</Text>
+              <Text style={styles.emptySub}>Tap the heart on a coin to add it here</Text>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <MaterialCommunityIcons name="layers-outline" size={64} color={colors.outlineVariant} />
+              <Text style={styles.emptyTitle}>No coins yet</Text>
+              <Text style={styles.emptySub}>Scan a coin to add it to your collection</Text>
+            </View>
+          )
         }
       />
 
