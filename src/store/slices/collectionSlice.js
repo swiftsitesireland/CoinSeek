@@ -9,7 +9,7 @@ const collectionSlice = createSlice({
   name: 'collection',
   initialState: {
     items: [],
-    wishlist: [],
+    favourites: [], // array of favourited coin IDs
   },
   reducers: {
     setCollection(state, action) {
@@ -45,21 +45,17 @@ const collectionSlice = createSlice({
         state.items[index] = { ...state.items[index], ...action.payload };
       }
     },
-    setWishlist(state, action) {
-      state.wishlist = action.payload;
+    setFavourites(state, action) {
+      const seen = new Set();
+      state.favourites = (Array.isArray(action.payload) ? action.payload : [])
+        .filter((id) => typeof id === 'string' && !seen.has(id) && seen.add(id));
     },
-    addToWishlist(state, action) {
-      const coin = action.payload;
-      if (!state.wishlist.find((item) => item.coin.id === coin.id)) {
-        state.wishlist.push({
-          id: localId(),
-          coin,
-          dateAdded: new Date().toISOString(),
-        });
-      }
-    },
-    removeFromWishlist(state, action) {
-      state.wishlist = state.wishlist.filter((item) => item.id !== action.payload);
+    toggleFavourite(state, action) {
+      const id = action.payload;
+      if (typeof id !== 'string') return;
+      const i = state.favourites.indexOf(id);
+      if (i === -1) state.favourites.push(id);
+      else state.favourites.splice(i, 1);
     },
   },
 });
@@ -69,16 +65,15 @@ export const {
   addToCollection,
   removeFromCollection,
   updateCollectionItem,
-  setWishlist,
-  addToWishlist,
-  removeFromWishlist,
+  setFavourites,
+  toggleFavourite,
 } = collectionSlice.actions;
 
 export default collectionSlice.reducer;
 
 // Selectors
 export const selectCollection = (state) => state.collection.items;
-export const selectWishlist = (state) => state.collection.wishlist;
+export const selectFavourites = (state) => state.collection.favourites;
 export const selectCollectionTotal = (state) =>
   state.collection.items.reduce(
     (sum, item) => sum + (item?.coin?.estimatedValue?.mid ?? 0) * (item?.quantity ?? 1),
@@ -86,5 +81,6 @@ export const selectCollectionTotal = (state) =>
   );
 export const selectIsInCollection = (coinId) => (state) =>
   state.collection.items.some((item) => item.coin.id === coinId);
-export const selectIsInWishlist = (coinId) => (state) =>
-  state.collection.wishlist.some((item) => item.coin.id === coinId);
+export const selectIsFavourite = (coinId) => (state) =>
+  state.collection.favourites.includes(coinId);
+export const selectFavouriteCount = (state) => state.collection.favourites.length;
