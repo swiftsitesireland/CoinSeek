@@ -1,5 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+// React Native (Hermes) has no global `crypto`, so crypto.randomUUID() throws.
+// These ids are local-only keys, not security-sensitive, so a timestamp +
+// random suffix is sufficient and dependency-free.
+const localId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+
 const collectionSlice = createSlice({
   name: 'collection',
   initialState: {
@@ -19,7 +24,7 @@ const collectionSlice = createSlice({
         if (backImageUri) existing.backImageUri = backImageUri;
       } else {
         state.items.push({
-          id: crypto.randomUUID(),
+          id: localId(),
           coin,
           quantity,
           condition: condition || coin.condition,
@@ -47,7 +52,7 @@ const collectionSlice = createSlice({
       const coin = action.payload;
       if (!state.wishlist.find((item) => item.coin.id === coin.id)) {
         state.wishlist.push({
-          id: crypto.randomUUID(),
+          id: localId(),
           coin,
           dateAdded: new Date().toISOString(),
         });

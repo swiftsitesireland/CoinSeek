@@ -181,10 +181,14 @@ export default function CameraScreen({ navigation }) {
     } catch (err) {
       clearInterval(interval);
       setIsAnalyzing(false);
-      if (err?.message?.includes('429') || err?.message?.toLowerCase().includes('scan limit')) {
+      const status = err?.status;
+      const msg = err?.message || '';
+      if (status === 429 || msg.includes('429') || msg.toLowerCase().includes('scan limit')) {
         setShowLimitModal(true);
       } else {
-        Alert.alert('Analysis Failed', 'Could not identify the coin. Try clearer photos.');
+        // Show the real (server-sanitized) reason instead of always blaming
+        // photo quality, so genuine failures are diagnosable.
+        Alert.alert('Analysis Failed', msg || 'Could not identify the coin. Please try again.');
       }
     }
   }

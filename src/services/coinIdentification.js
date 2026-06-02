@@ -2,6 +2,32 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 
+// supabase.functions.invoke() collapses every non-2xx into the opaque message
+// "Edge Function returned a non-2xx status code". The real status and JSON body
+// live on error.context (a Response). Extract them so callers can tell a 429
+// scan-limit from a 400/500, and so failures are actually diagnosable.
+//
+// We duck-type on error.context rather than `instanceof FunctionsHttpError`:
+// bundling can produce duplicate @supabase/supabase-js copies, so instanceof
+// against our imported class is unreliable.
+async function describeFunctionError(error) {
+  const ctx = error?.context;
+  if (ctx && typeof ctx.status === 'number') {
+    const status = ctx.status;
+    let detail = '';
+    try {
+      const body = await ctx.clone().json();
+      detail = body?.error || JSON.stringify(body);
+    } catch {
+      try { detail = await ctx.clone().text(); } catch { /* ignore */ }
+    }
+    const e = new Error(`[${status}] ${detail || error.message}`);
+    e.status = status;
+    return e;
+  }
+  return new Error(error?.message || 'Edge function error');
+}
+
 async function imageToBase64(uri) {
   return FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
 }
@@ -39,12 +65,15 @@ export async function identifyCoin(frontUri, backUri) {
       body: { frontBase64, ...(backBase64 ? { backBase64 } : {}) },
     });
 
-    if (error) throw new Error(error.message || 'Edge function error');
+    if (error) throw await describeFunctionError(error);
     if (!data?.coin) throw new Error('No coin data returned');
 
     const validated = validateCoin(data.coin);
     const coin = {
-      id: `ai_${crypto.randomUUID()}`,
+      // React Native (Hermes) has no global `crypto`, so crypto.randomUUID()
+      // throws. This id is only a local history key, not security-sensitive, so
+      // a timestamp + random suffix is sufficient and dependency-free.
+      id: `ai_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`,
       imageUrl: null,
       ...validated,
     };

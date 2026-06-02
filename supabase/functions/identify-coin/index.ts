@@ -176,8 +176,11 @@ Deno.serve(async (req) => {
     }
 
     // ── VULN-02: Server-side daily scan limit ─────────────────────────────────
+    // Read-only check here; the scan is only CONSUMED after a successful
+    // identification (see consume_daily_scan below) so failed scans (e.g. a
+    // Gemini error) never burn the user's quota.
     const { data: scanData, error: scanError } = await adminClient.rpc(
-      'check_and_increment_daily_scan',
+      'check_daily_scan_limit',
       { p_user_id: user.id },
     );
 
@@ -266,8 +269,21 @@ Deno.serve(async (req) => {
     const rawCoin  = JSON.parse(jsonText);
     const coin     = validateCoin(rawCoin);
 
+    // ── Consume the scan ONLY now that we have a valid identification ─────────
+    // A failure anywhere above returns before reaching here, so failed scans are
+    // never charged against the user's daily quota.
+    const { data: consumeData, error: consumeError } = await adminClient.rpc(
+      'consume_daily_scan',
+      { p_user_id: user.id },
+    );
+    if (consumeError) {
+      console.error('[identify-coin] consume RPC error:', consumeError.message);
+    }
+    const scansRemaining =
+      consumeData?.scans_remaining ?? scanData.scans_remaining ?? Math.max(0, remaining - 1);
+
     return new Response(
-      JSON.stringify({ coin, scansRemaining: scanData.scans_remaining ?? Math.max(0, remaining - 1) }),
+      JSON.stringify({ coin, scansRemaining }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
