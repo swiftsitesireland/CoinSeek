@@ -111,7 +111,7 @@ export default function CameraScreen({ navigation }) {
     }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.5,
       allowsEditing: true,
       aspect: [1, 1],

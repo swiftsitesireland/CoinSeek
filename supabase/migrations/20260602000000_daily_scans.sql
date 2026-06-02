@@ -26,6 +26,11 @@ ALTER TABLE public.daily_scans ENABLE ROW LEVEL SECURITY;
 --   • Free → allowed while today's count < limit; increments on success only.
 -- SECURITY DEFINER so it can read subscriptions / write daily_scans regardless
 -- of the caller's role.
+-- Drop first: an earlier hand-run version of this function may exist with a
+-- different return type, and CREATE OR REPLACE cannot change a return type
+-- (SQLSTATE 42P13). Dropping makes this migration idempotent across environments
+-- where the function was applied manually.
+DROP FUNCTION IF EXISTS public.check_and_increment_daily_scan(uuid);
 CREATE OR REPLACE FUNCTION public.check_and_increment_daily_scan(
   p_user_id UUID
 ) RETURNS JSONB

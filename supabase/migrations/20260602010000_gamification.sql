@@ -48,16 +48,23 @@ on conflict (id) do nothing;
 
 -- ── RLS ──────────────────────────────────────────────────────────────────────
 
+-- DROP ... IF EXISTS before each CREATE POLICY: an earlier hand-run version of
+-- this migration may already have created these policies, and CREATE POLICY is
+-- not idempotent (SQLSTATE 42710). This keeps the migration safe to re-run.
 alter table public.user_xp enable row level security;
+drop policy if exists "own xp read" on public.user_xp;
 create policy "own xp read"   on public.user_xp for select using (auth.uid() = user_id);
 
 alter table public.user_badges enable row level security;
+drop policy if exists "own badges read" on public.user_badges;
 create policy "own badges read" on public.user_badges for select using (auth.uid() = user_id);
 
 alter table public.challenges enable row level security;
+drop policy if exists "all read challenges" on public.challenges;
 create policy "all read challenges" on public.challenges for select to authenticated using (true);
 
 alter table public.user_challenges enable row level security;
+drop policy if exists "own challenges" on public.user_challenges;
 create policy "own challenges"
   on public.user_challenges for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
