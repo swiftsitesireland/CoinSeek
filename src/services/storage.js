@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const KEYS = {
   COLLECTION: '@coin_collector/collection',
   HISTORY:    '@coin_collector/history',
-  WISHLIST:   '@coin_collector/wishlist',
+  FAVOURITES: '@coin_collector/favourites',
   SETTINGS:   '@coin_collector/settings',
 };
 
@@ -76,20 +76,21 @@ export async function loadHistory() {
   }
 }
 
-export async function saveWishlist(wishlist) {
+export async function saveFavourites(ids) {
   try {
-    await AsyncStorage.setItem(KEYS.WISHLIST, JSON.stringify(wishlist));
+    await AsyncStorage.setItem(KEYS.FAVOURITES, JSON.stringify(ids));
   } catch (e) {
-    console.error('Failed to save wishlist:', e);
+    console.error('Failed to save favourites:', e);
   }
 }
 
-export async function loadWishlist() {
+export async function loadFavourites() {
   try {
-    const data = await AsyncStorage.getItem(KEYS.WISHLIST);
-    return data ? safeParseArray(data) : [];
+    const data = await AsyncStorage.getItem(KEYS.FAVOURITES);
+    if (!data) return [];
+    return safeParseArray(data).filter((id) => typeof id === 'string');
   } catch (e) {
-    console.error('Failed to load wishlist:', e);
+    console.error('Failed to load favourites:', e);
     return [];
   }
 }
