@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import CameraScreen                from '../screens/CameraScreen';
 import CollectionScreen            from '../screens/CollectionScreen';
+import ProgressScreen              from '../screens/ProgressScreen';
 import ProfileScreen               from '../screens/ProfileScreen';
 import ResultsScreen               from '../screens/ResultsScreen';
 import AccountSettingsScreen       from '../screens/AccountSettingsScreen';
@@ -119,8 +120,9 @@ function MainTabs() {
         tabBarIcon: ({ focused, color }) => {
           if (route.name === 'Scan') return <ScanTabIcon focused={focused} />;
           const icons = {
-            Collection: focused ? 'layers'   : 'layers-outline',
-            Profile:    focused ? 'account'  : 'account-outline',
+            Collection: focused ? 'layers'        : 'layers-outline',
+            Progress:   focused ? 'trophy'         : 'trophy-outline',
+            Profile:    focused ? 'account'        : 'account-outline',
           };
           return <MaterialCommunityIcons name={icons[route.name]} size={22} color={color} />;
         },
@@ -128,6 +130,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Scan"       component={ScanStack}       options={{ tabBarLabel: 'Scan' }} />
       <Tab.Screen name="Collection" component={CollectionStack} options={{ tabBarLabel: 'Collection' }} />
+      <Tab.Screen name="Progress"   component={ProgressScreen}  options={{ tabBarLabel: 'Progress' }} />
       <Tab.Screen name="Profile"    component={ProfileStack}    options={{ tabBarLabel: 'Profile' }} />
     </Tab.Navigator>
   );
