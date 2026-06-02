@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { selectCollection, setCollection, selectWishlist, selectIsInWishlist, addToWishlist, removeFromWishlist } from '../store/slices/collectionSlice';
+import { selectCollection, setCollection, selectIsFavourite, toggleFavourite } from '../store/slices/collectionSlice';
 import { selectCurrency } from '../store/slices/settingsSlice';
 import { formatCurrency, currencySymbol } from '../utils/currency';
 import { useStripePayment } from '../hooks/useStripePayment';
@@ -70,9 +70,8 @@ export default function ResultsScreen({ navigation, route }) {
   const { user }   = useAuth();
   const collection   = useSelector(selectCollection);
   const earnedBadges = useSelector(selectBadges);
-  const wishlist     = useSelector(selectWishlist);
   const currency   = useSelector(selectCurrency);
-  const isInWishlist = useSelector(selectIsInWishlist(result?.coin?.id));
+  const isFavourite  = useSelector(selectIsFavourite(result?.coin?.id));
 
   const marketAccess   = useFeatureAccess('marketValue');
   const analysisAccess = useFeatureAccess('aiAnalysis');
@@ -199,16 +198,14 @@ export default function ResultsScreen({ navigation, route }) {
     }
   }
 
-  function handleWishlist() {
+  function handleFavourite() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (isInWishlist) {
-      const wishlistItem = wishlist.find((i) => i.coin.id === coin.id);
-      if (wishlistItem) dispatch(removeFromWishlist(wishlistItem.id));
-      Toast.show({ type: 'info', text1: 'Removed from Wishlist', text2: coin.name });
-    } else {
-      dispatch(addToWishlist(coin));
-      Toast.show({ type: 'success', text1: 'Added to Wishlist', text2: coin.name });
-    }
+    dispatch(toggleFavourite(coin.id));
+    Toast.show({
+      type: isFavourite ? 'info' : 'success',
+      text1: isFavourite ? 'Removed from Favourites' : 'Added to Favourites',
+      text2: coin.name,
+    });
   }
 
   async function handleShare() {
@@ -489,14 +486,14 @@ export default function ResultsScreen({ navigation, route }) {
       {/* ── Bottom action bar ─────────────────────────────────────────── */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
         <TouchableOpacity
-          style={[styles.wishlistBtn, isInWishlist && styles.wishlistBtnActive]}
-          onPress={handleWishlist}
+          style={[styles.favouriteBtn, isFavourite && styles.favouriteBtnActive]}
+          onPress={handleFavourite}
           activeOpacity={0.8}
         >
           <MaterialCommunityIcons
-            name={isInWishlist ? 'heart' : 'heart-outline'}
+            name={isFavourite ? 'heart' : 'heart-outline'}
             size={22}
-            color={isInWishlist ? colors.error : colors.textMuted}
+            color={isFavourite ? colors.error : colors.textMuted}
           />
         </TouchableOpacity>
         <TouchableOpacity
@@ -609,14 +606,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1, borderTopColor: colors.outlineVariant,
     flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
   },
-  wishlistBtn: {
+  favouriteBtn: {
     width: 52, height: 52, borderRadius: borderRadius.md,
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 1, borderColor: colors.outlineVariant,
     backgroundColor: colors.surfaceContainer,
     flexShrink: 0,
   },
-  wishlistBtnActive: {
+  favouriteBtnActive: {
     borderColor: 'rgba(255,100,100,0.4)',
     backgroundColor: 'rgba(255,100,100,0.08)',
   },
