@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Image, Alert, Share, Dimensions,
@@ -41,6 +41,20 @@ function ProBadge() {
       <Text style={styles.proBadgeText}>PRO</Text>
     </View>
   );
+}
+
+function fireXPToast(xpEarned, newTotal, levelAfter, badgeId) {
+  Toast.show({
+    type:           'xpEarned',
+    position:       'bottom',
+    visibilityTime: 3000,
+    props: {
+      xp:      xpEarned,
+      badgeId: badgeId ?? null,
+      newTotal,
+      level:   levelAfter,
+    },
+  });
 }
 
 export default function ResultsScreen({ navigation, route }) {
@@ -94,21 +108,7 @@ export default function ResultsScreen({ navigation, route }) {
 
   const isInCollection = collection.some(i => i.coin.id === coin.id);
 
-  function fireXPToast(xpEarned, newTotal, levelAfter, badgeId) {
-    Toast.show({
-      type:           'xpEarned',
-      position:       'bottom',
-      visibilityTime: 3000,
-      props: {
-        xp:      xpEarned,
-        badgeId: badgeId ?? null,
-        newTotal,
-        level:   levelAfter,
-      },
-    });
-  }
-
-  async function handleAwardXP(action, coinData) {
+  const handleAwardXP = useCallback(async (action, coinData) => {
     try {
       const xpResult = await awardXP(action, {
         rarity:      coinData?.rarity,
@@ -134,7 +134,7 @@ export default function ResultsScreen({ navigation, route }) {
         level:          xpResult.level_after,
         earnedBadges,
         collectionSize: collection.length + (action === 'add' ? 1 : 0),
-        scanCount:      0,
+        scanCount:      0, // TODO: wire to real scan count from gamification slice when available — scan-milestone badges inactive until then
         countries,
       });
 
@@ -143,15 +143,15 @@ export default function ResultsScreen({ navigation, route }) {
     } catch (e) {
       console.warn('handleAwardXP error:', e.message);
     }
-  }
+  }, [dispatch, collection, earnedBadges]);
 
-  const xpFiredRef = React.useRef(false);
-  React.useEffect(() => {
+  const xpFiredRef = useRef(false);
+  useEffect(() => {
     if (coin && !xpFiredRef.current) {
       xpFiredRef.current = true;
       handleAwardXP('scan', coin);
     }
-  }, []);
+  }, [coin, handleAwardXP]);
 
   function handleUpgradeFor(featureName) {
     setUpgradeFeature(featureName);
