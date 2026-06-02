@@ -34,8 +34,12 @@ async function imageToBase64(uri) {
 
 function validateCoin(raw) {
   if (!raw || typeof raw !== 'object') throw new Error('Invalid coin response');
-  const str  = (v, fallback = '') => (typeof v === 'string' ? v.slice(0, 500) : fallback);
+  const str  = (v, fallback = '') => (typeof v === 'string' ? v.slice(0, 600) : fallback);
   const num  = (v, fallback = 0)  => (Number.isFinite(Number(v)) ? Number(v) : fallback);
+  const numN = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
+  const tags = Array.isArray(raw.tags)
+    ? raw.tags.slice(0, 20).map(t => (typeof t === 'string' ? t.slice(0, 50) : '')).filter(Boolean)
+    : [];
   return {
     name:        str(raw.name,        'Unknown Coin'),
     country:     str(raw.country,     'Unknown'),
@@ -43,11 +47,19 @@ function validateCoin(raw) {
     denomination:str(raw.denomination,''),
     composition: str(raw.composition, ''),
     mintMark:    str(raw.mintMark,    ''),
+    mint:        str(raw.mint,        ''),
     weight:      str(raw.weight,      ''),
     diameter:    str(raw.diameter,    ''),
     rarity:      str(raw.rarity,      'common'),
     condition:   str(raw.condition,   ''),
     confidence:  num(raw.confidence,  0),
+    mintCount:   numN(raw.mintCount),
+    description: str(raw.description, ''),
+    obverse:     str(raw.obverse,     ''),
+    reverse:     str(raw.reverse,     ''),
+    designer:    str(raw.designer,    ''),
+    series:      str(raw.series,      ''),
+    tags,
     estimatedValue: {
       low:  num(raw.estimatedValue?.low,  0),
       mid:  num(raw.estimatedValue?.mid,  0),
