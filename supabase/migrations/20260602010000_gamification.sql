@@ -170,6 +170,11 @@ grant  execute on function public.award_badge(text) to authenticated;
 
 -- ── Leaderboard view ─────────────────────────────────────────────────────────
 
+-- The profiles table predates this migration and may lack display_name in some
+-- environments. Add it defensively so the leaderboard view can reference it.
+-- (The app's authService already reads/writes profiles.display_name.)
+alter table public.profiles add column if not exists display_name text;
+
 create or replace view public.leaderboard_weekly as
 select
   u.user_id,
