@@ -6,8 +6,9 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { selectCurrency } from '../store/slices/settingsSlice';
+import { selectIsFavourite, toggleFavourite } from '../store/slices/collectionSlice';
 import { formatCurrency } from '../utils/currency';
 import { colors, spacing, borderRadius, fonts, rarityConfig } from '../theme';
 
@@ -28,6 +29,8 @@ export default function CoinDetailsModal({
 }) {
   const [activeTab, setActiveTab] = useState('details');
   const currency = useSelector(selectCurrency);
+  const dispatch = useDispatch();
+  const isFavourite = useSelector(selectIsFavourite(coin?.id));
   if (!coin) return null;
 
   const rarity = rarityConfig[coin.rarity] || rarityConfig.common;
@@ -50,6 +53,17 @@ export default function CoinDetailsModal({
             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onClose(); }}
           >
             <MaterialCommunityIcons name="close" size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.favBtn}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); dispatch(toggleFavourite(coin.id)); }}
+          >
+            <MaterialCommunityIcons
+              name={isFavourite ? 'heart' : 'heart-outline'}
+              size={20}
+              color={isFavourite ? colors.error : colors.text}
+            />
           </TouchableOpacity>
 
           <View style={styles.coinCircle}>
@@ -233,6 +247,13 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: 'absolute', top: spacing.lg, right: spacing.lg,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: colors.surfaceContainer,
+    borderWidth: 1, borderColor: colors.outlineVariant,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  favBtn: {
+    position: 'absolute', top: spacing.lg, left: spacing.lg, zIndex: 10,
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: colors.surfaceContainer,
     borderWidth: 1, borderColor: colors.outlineVariant,
