@@ -93,6 +93,7 @@ export async function identifyCoin(frontUri, backUri) {
     return {
       coin,
       confidence: validated.confidence || 85,
+      scansRemaining: typeof data.scansRemaining === 'number' ? data.scansRemaining : null,
       analysisDetails: {
         edgeDetection: 'Coin outline analyzed by Gemini Vision',
         surfaceAnalysis: `Condition estimated: ${coin.condition}`,
