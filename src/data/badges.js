@@ -34,7 +34,7 @@ export const BADGES = [
   { id: 'level_15',          emoji: '💫', name: 'Elite Collector',    description: 'Reach level 15',              category: 'levels',     criteria: { action: 'level',      count: 15 } },
   { id: 'level_20',          emoji: '🏆', name: 'Master',             description: 'Reach level 20',              category: 'levels',     criteria: { action: 'level',      count: 20 } },
   // ── Special ───────────────────────────────────────────────────────────────
-  { id: 'wishlist_10',       emoji: '💫', name: 'Dream Collector',    description: 'Add 10 coins to wishlist',     category: 'collection', criteria: { action: 'wishlist',   count: 10 } },
+  { id: 'favourite_10',      emoji: '💫', name: 'Curator',            description: 'Favourite 10 coins',           category: 'collection', criteria: { action: 'favourite', count: 10 } },
   { id: 'share_1',           emoji: '📤', name: 'Show Off',           description: 'Share a coin result',          category: 'special',    criteria: { action: 'share',      count: 1 } },
   { id: 'profile_complete',  emoji: '✅', name: 'All Set',            description: 'Complete your profile',        category: 'special',    criteria: { action: 'profile',    count: 1 } },
 ];
