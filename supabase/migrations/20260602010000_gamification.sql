@@ -4,7 +4,7 @@ create table if not exists public.user_xp (
   user_id    uuid primary key references auth.users(id) on delete cascade,
   total_xp   int  not null default 0,
   week_xp    int  not null default 0,
-  week_start date not null default date_trunc('week', current_date)::date,
+  week_start date not null default date_trunc('week', (now() at time zone 'utc'))::date,
   level      int  not null default 1,
   updated_at timestamptz not null default now()
 );
@@ -69,6 +69,7 @@ create or replace function public.award_xp(
 )
 returns jsonb
 language plpgsql security definer
+set search_path = public
 as $$
 declare
   v_uid         uuid := auth.uid();
@@ -78,7 +79,7 @@ declare
   v_cur_week    date;
   v_new_xp      int;
   v_new_week_xp int;
-  v_new_week    date := date_trunc('week', current_date)::date;
+  v_new_week    date := date_trunc('week', (now() at time zone 'utc'))::date;
   v_level_before int := 1;
   v_level_after  int;
 begin
@@ -98,7 +99,7 @@ begin
   end if;
 
   if v_xp_earned = 0 then
-    return jsonb_build_object('xp_earned', 0, 'new_total', 0, 'level_before', 1, 'level_after', 1);
+    return jsonb_build_object('xp_earned', 0);
   end if;
 
   select total_xp, week_xp, week_start, level
@@ -142,11 +143,15 @@ begin
 end;
 $$;
 
+revoke execute on function public.award_xp(text, jsonb) from public;
+grant  execute on function public.award_xp(text, jsonb) to authenticated;
+
 -- ── RPC: award_badge ─────────────────────────────────────────────────────────
 
 create or replace function public.award_badge(p_badge_id text)
 returns jsonb
 language plpgsql security definer
+set search_path = public
 as $$
 declare
   v_uid uuid := auth.uid();
@@ -159,6 +164,9 @@ begin
   return jsonb_build_object('badge_id', p_badge_id, 'newly_earned', v_new > 0);
 end;
 $$;
+
+revoke execute on function public.award_badge(text) from public;
+grant  execute on function public.award_badge(text) to authenticated;
 
 -- ── Leaderboard view ─────────────────────────────────────────────────────────
 
