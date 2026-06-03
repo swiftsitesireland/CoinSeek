@@ -1,7 +1,7 @@
 const STATS = [
-  { value: '15k+', label: 'COINS IN DATABASE' },
+  { value: 'AI', label: 'INSTANT IDENTIFICATION' },
   { value: '<2s', label: 'AVERAGE SCAN TIME' },
-  { value: '98%', label: 'IDENTIFICATION ACCURACY' },
+  { value: '∞', label: 'ANCIENT TO MODERN' },
 ]
 
 export default function Stats() {
