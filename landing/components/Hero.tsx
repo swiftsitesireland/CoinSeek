@@ -2,52 +2,59 @@ import WaitlistForm from './WaitlistForm'
 
 export default function Hero() {
   return (
-    <section className="relative z-10 px-8 py-12 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-8 items-start border-b border-[rgba(255,184,0,0.08)]">
-      <div>
-        <p className="font-mono text-[10px] text-[rgba(255,184,0,0.45)] tracking-[3px] mb-3.5 uppercase">
-          // AI-POWERED NUMISMATIC INTELLIGENCE
-        </p>
-        <h1 className="font-outfit font-black leading-[0.92] tracking-[-4px] text-white mb-1.5 text-[72px] max-md:text-[48px]">
+    <section className="relative z-10 border-b border-[rgba(255,184,0,0.08)] py-20 px-8">
+      <div className="max-w-2xl mx-auto flex flex-col items-center text-center">
+
+        {/* Coin icon */}
+        <div className="relative w-14 h-14 rounded-full border border-[rgba(255,184,0,0.25)] flex items-center justify-center mb-6 bg-[rgba(255,184,0,0.04)]">
+          <div className="absolute inset-2.5 rounded-full border border-dashed border-[rgba(255,184,0,0.1)]" />
+          <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFB800] to-transparent top-4 shadow-[0_0_6px_rgba(255,184,0,0.4)]" />
+          <div className="absolute -top-px -left-px w-2.5 h-2.5 border-t border-l border-[rgba(255,184,0,0.4)]" />
+          <div className="absolute -top-px -right-px w-2.5 h-2.5 border-t border-r border-[rgba(255,184,0,0.4)]" />
+          <div className="absolute -bottom-px -left-px w-2.5 h-2.5 border-b border-l border-[rgba(255,184,0,0.4)]" />
+          <div className="absolute -bottom-px -right-px w-2.5 h-2.5 border-b border-r border-[rgba(255,184,0,0.4)]" />
+          <span className="font-outfit font-black text-xl text-[rgba(255,184,0,0.4)]">¢</span>
+        </div>
+
+        {/* Badge */}
+        <div className="flex items-center gap-2 mb-8 border border-[rgba(255,184,0,0.15)] rounded-full px-4 py-1.5 bg-[rgba(255,184,0,0.03)]">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#FFB800]" />
+          <span className="font-mono text-[9px] text-[rgba(255,184,0,0.6)] tracking-[2px]">BETA GOES LIVE SOON</span>
+        </div>
+
+        {/* Headline */}
+        <h1 className="font-outfit font-black text-[72px] max-md:text-[48px] leading-[0.92] tracking-[-4px] text-white mb-1.5">
           IDENTIFY
         </h1>
-        <h1 className="font-outfit font-black leading-[0.92] tracking-[-4px] text-[#FFB800] mb-6 text-[72px] max-md:text-[48px]">
+        <h1 className="font-outfit font-black text-[72px] max-md:text-[48px] leading-[0.92] tracking-[-4px] text-[#FFB800] mb-7">
           ANY COIN.
         </h1>
-        <p className="text-[14px] text-[#4a4a4a] leading-relaxed max-w-[380px] mb-6 font-light">
+
+        {/* Subtext */}
+        <p className="text-[14px] text-[#4a4a4a] leading-relaxed max-w-xs mb-8 font-light">
           Point your camera. Our AI instantly names the coin, scores its rarity,
           and tells you what it&apos;s worth — ancient to modern.
         </p>
-        <WaitlistForm buttonText="→ JOIN WAITLIST" />
-        <p className="font-mono text-[9px] text-[#2a2a2a] tracking-[0.5px] mt-3">
-          No spam, ever.
-        </p>
-      </div>
 
-      <div className="max-md:hidden pt-2 shrink-0">
-        <CoinWidget />
+        {/* Form */}
+        <WaitlistForm buttonText="→ JOIN WAITLIST" />
+        <p className="font-mono text-[9px] text-[#2a2a2a] tracking-[0.5px] mt-3">No spam, ever.</p>
+
+        {/* Social proof */}
+        <div className="flex items-center gap-2.5 mt-6">
+          <div className="flex">
+            {['#4a9eff', '#ff7a4a', '#4aff9e', '#c9a227'].map((color, i) => (
+              <div
+                key={i}
+                className="w-5 h-5 rounded-full border-2 border-[#0d0d0d]"
+                style={{ background: color, marginLeft: i === 0 ? 0 : '-6px' }}
+              />
+            ))}
+          </div>
+          <span className="font-mono text-[9px] text-[#444] tracking-[1px]">240+ COLLECTORS JOINED</span>
+        </div>
+
       </div>
     </section>
-  )
-}
-
-function CoinWidget() {
-  return (
-    <div>
-      <div className="relative w-40 h-40 rounded-full border border-[rgba(255,184,0,0.15)] flex items-center justify-center">
-        <div className="absolute inset-3.5 rounded-full border border-dashed border-[rgba(255,184,0,0.08)]" />
-        <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFB800] to-transparent top-10 shadow-[0_0_8px_rgba(255,184,0,0.4)]" />
-        <div className="absolute -top-px -left-px w-3 h-3 border-t-2 border-l-2 border-[rgba(255,184,0,0.4)] rounded-tl-sm" />
-        <div className="absolute -top-px -right-px w-3 h-3 border-t-2 border-r-2 border-[rgba(255,184,0,0.4)] rounded-tr-sm" />
-        <div className="absolute -bottom-px -left-px w-3 h-3 border-b-2 border-l-2 border-[rgba(255,184,0,0.4)] rounded-bl-sm" />
-        <div className="absolute -bottom-px -right-px w-3 h-3 border-b-2 border-r-2 border-[rgba(255,184,0,0.4)] rounded-br-sm" />
-        <span className="font-outfit font-black text-[56px] text-[rgba(255,184,0,0.1)]">¢</span>
-      </div>
-      <div className="mt-3 bg-[rgba(255,184,0,0.04)] border border-[rgba(255,184,0,0.12)] rounded p-2.5 font-mono text-[9px] w-40">
-        <p className="text-[#FFB800] mb-1">→ SCAN COMPLETE</p>
-        <p className="text-[#444]">Coin: <span className="text-[#888]">1921 Morgan Dollar</span></p>
-        <p className="text-[#444]">Grade: <span className="text-[#888]">MS-63</span></p>
-        <p className="text-[#444]">Value: <span className="text-[#888]">$85 – $140</span></p>
-      </div>
-    </div>
   )
 }
