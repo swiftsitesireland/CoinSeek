@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { getSupabase } from '@/lib/supabase'
 import { validateWaitlistInput } from '@/lib/validation'
 import type { WaitlistResponse } from '@/lib/types'
 
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<WaitlistRespo
     return NextResponse.json({ success: false, error: result.error }, { status: 400 })
   }
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('waitlist')
     .upsert({ email: result.email, platform: result.platform }, { onConflict: 'email' })
 
