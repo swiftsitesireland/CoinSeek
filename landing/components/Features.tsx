@@ -36,7 +36,7 @@ export default function Features() {
               <h3 className="text-[15px] font-bold text-white mb-2 tracking-[-0.3px]">
                 {f.title}
               </h3>
-              <p className="text-[12px] text-[#444] leading-relaxed font-light">{f.desc}</p>
+              <p className="text-[12px] text-[#888] leading-relaxed font-light">{f.desc}</p>
               <div className="w-6 h-0.5 bg-[#FFB800] mt-3.5" />
             </div>
           ))}

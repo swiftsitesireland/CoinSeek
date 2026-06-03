@@ -13,7 +13,7 @@ export default function Stats() {
             <div className="font-outfit font-black text-[36px] text-[#FFB800] leading-none mb-1">
               {stat.value}
             </div>
-            <div className="font-mono text-[9px] text-[#444] tracking-[1px]">
+            <div className="font-mono text-[9px] text-[#888] tracking-[1px]">
               {stat.label}
             </div>
           </div>

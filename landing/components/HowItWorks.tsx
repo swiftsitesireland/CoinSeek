@@ -34,7 +34,7 @@ export default function HowItWorks() {
                 {step.num}
               </div>
               <h3 className="text-[14px] font-bold text-white mb-1.5">{step.title}</h3>
-              <p className="text-[12px] text-[#444] leading-relaxed font-light">{step.desc}</p>
+              <p className="text-[12px] text-[#888] leading-relaxed font-light">{step.desc}</p>
               {i < STEPS.length - 1 && (
                 <span className="absolute -right-3 top-7 font-mono text-[rgba(255,184,0,0.2)] text-lg max-md:hidden">
                   →

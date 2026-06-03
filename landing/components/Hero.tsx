@@ -31,7 +31,7 @@ export default function Hero() {
         </h1>
 
         {/* Subtext */}
-        <p className="text-[14px] text-[#4a4a4a] leading-relaxed max-w-xs mb-8 font-light">
+        <p className="text-[14px] text-[#888] leading-relaxed max-w-xs mb-8 font-light">
           Point your camera. Our AI instantly names the coin, scores its rarity,
           and tells you what it&apos;s worth — ancient to modern.
         </p>
@@ -40,19 +40,6 @@ export default function Hero() {
         <WaitlistForm buttonText="→ JOIN WAITLIST" />
         <p className="font-mono text-[9px] text-[#2a2a2a] tracking-[0.5px] mt-3">No spam, ever.</p>
 
-        {/* Social proof */}
-        <div className="flex items-center gap-2.5 mt-6">
-          <div className="flex">
-            {['#4a9eff', '#ff7a4a', '#4aff9e', '#c9a227'].map((color, i) => (
-              <div
-                key={i}
-                className="w-5 h-5 rounded-full border-2 border-[#0d0d0d]"
-                style={{ background: color, marginLeft: i === 0 ? 0 : '-6px' }}
-              />
-            ))}
-          </div>
-          <span className="font-mono text-[9px] text-[#444] tracking-[1px]">240+ COLLECTORS JOINED</span>
-        </div>
 
       </div>
     </section>
