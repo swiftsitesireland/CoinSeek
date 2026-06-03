@@ -12,11 +12,21 @@ import Toast from 'react-native-toast-message';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function ForgotPasswordScreen({ navigation }) {
+export default function ForgotPasswordScreen({ navigation, route }) {
   const [email,   setEmail]   = useState('');
   const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sent,    setSent]    = useState(false);
+
+  // Reached from Account Settings → "Change Password" while signed in. In that
+  // stack there's no "Login" route, so go back to settings instead of crashing.
+  const fromSettings = route?.params?.fromSettings;
+
+  function handleDone() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Login');
+  }
 
   function friendlyError(msg) {
     if (msg.includes('Too many requests') || msg.includes('429')) {
@@ -68,7 +78,7 @@ export default function ForgotPasswordScreen({ navigation }) {
           />
         </View>
 
-        <Text style={styles.title}>{sent ? 'Email Sent!' : 'Reset Password'}</Text>
+        <Text style={styles.title}>{sent ? 'Email Sent!' : (fromSettings ? 'Change Password' : 'Reset Password')}</Text>
         <Text style={styles.subtitle}>
           {sent
             ? `Check your inbox at ${email} for a password reset link.`
@@ -115,7 +125,7 @@ export default function ForgotPasswordScreen({ navigation }) {
         {sent && (
           <TouchableOpacity
             style={styles.primaryBtnOuter}
-            onPress={() => navigation.navigate('Login')}
+            onPress={handleDone}
           >
             <LinearGradient
               colors={[colors.gradientStart, colors.gradientEnd]}
@@ -123,7 +133,7 @@ export default function ForgotPasswordScreen({ navigation }) {
               end={{ x: 1, y: 0 }}
               style={styles.primaryBtn}
             >
-              <Text style={styles.primaryBtnText}>Back to Login</Text>
+              <Text style={styles.primaryBtnText}>{fromSettings ? 'Done' : 'Back to Login'}</Text>
             </LinearGradient>
           </TouchableOpacity>
         )}

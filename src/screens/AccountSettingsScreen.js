@@ -266,7 +266,7 @@ export default function AccountSettingsScreen({ navigation }) {
           <SettingRow
             icon="lock-reset"
             label="Change Password"
-            onPress={() => navigation.navigate('ForgotPassword')}
+            onPress={() => navigation.navigate('ForgotPassword', { fromSettings: true })}
             right={<MaterialCommunityIcons name="chevron-right" size={18} color={colors.textMuted} />}
           />
         </Section>

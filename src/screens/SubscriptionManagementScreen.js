@@ -49,9 +49,12 @@ export default function SubscriptionManagementScreen({ navigation }) {
 
   // ─── Status label ─────────────────────────────────────────────────────────
   function getStatusLabel() {
-    if (!subscription || subscription.status === 'canceled') return { label: 'Inactive',    color: colors.error };
-    if (isFreeTrial)   return { label: `Free Trial — ${daysLeft}d left`, color: colors.warning };
+    // Order matters: a free-trial user has no subscriptions row yet (trial state
+    // lives in the profiles table), so check premium/trial BEFORE falling back to
+    // the "Inactive" subscription check — otherwise an active trial reads as inactive.
     if (isPremium)     return { label: 'Premium Active',                  color: colors.success };
+    if (isFreeTrial)   return { label: `Free Trial — ${daysLeft}d left`,  color: colors.warning };
+    if (!subscription || subscription.status === 'canceled') return { label: 'Inactive', color: colors.error };
     return               { label: 'Expired',                              color: colors.error };
   }
 
@@ -142,19 +145,21 @@ export default function SubscriptionManagementScreen({ navigation }) {
         </LinearGradient>
 
         {/* ── Plan details ────────────────────────────────────────────── */}
-        {subscription && (
+        {(subscription || isFreeTrial) && (
           <SectionCard title="Plan Details">
             <InfoRow
               icon="tag-outline"
               label="Current plan"
               value={isPremium ? 'Premium · €18.99/year' : 'Free Trial'}
             />
-            <InfoRow
-              icon="check-circle-outline"
-              label="Status"
-              value={subscription.status === 'active' ? 'Active' : 'Cancelled'}
-              valueColor={subscription.status === 'active' ? colors.success : colors.error}
-            />
+            {subscription && (
+              <InfoRow
+                icon="check-circle-outline"
+                label="Status"
+                value={subscription.status === 'active' ? 'Active' : 'Cancelled'}
+                valueColor={subscription.status === 'active' ? colors.success : colors.error}
+              />
+            )}
             {isFreeTrial && (
               <InfoRow
                 icon="clock-outline"
@@ -163,14 +168,14 @@ export default function SubscriptionManagementScreen({ navigation }) {
                 valueColor={daysLeft <= 2 ? colors.warning : undefined}
               />
             )}
-            {isPremium && subscription.current_period_end && (
+            {isPremium && subscription?.current_period_end && (
               <InfoRow
                 icon="calendar-refresh-outline"
                 label="Renews on"
                 value={formatRenewalDate(subscription)}
               />
             )}
-            {subscription.created_at && (
+            {subscription?.created_at && (
               <InfoRow
                 icon="calendar-plus-outline"
                 label="Member since"
