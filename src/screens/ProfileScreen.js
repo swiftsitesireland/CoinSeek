@@ -169,7 +169,7 @@ export default function ProfileScreen({ navigation }) {
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={[styles.statNum, { color: colors.primary }]}>
-              {formatCurrency(totalValue, settings.currency)}
+              {formatCurrency(totalValue, settings.currency, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </Text>
             <Text style={styles.statLabel}>Value</Text>
           </View>

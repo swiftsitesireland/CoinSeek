@@ -26,6 +26,7 @@ export default function CoinDetailsModal({
   visible, coin, onClose,
   onAddToCollection,
   isInCollection,
+  collectionItem,
 }) {
   const [activeTab, setActiveTab] = useState('details');
   const currency = useSelector(selectCurrency);
@@ -33,6 +34,7 @@ export default function CoinDetailsModal({
   const isFavourite = useSelector(selectIsFavourite(coin?.id));
   if (!coin) return null;
 
+  const displayImage = collectionItem?.frontImageUri || coin.imageUrl;
   const rarity = rarityConfig[coin.rarity] || rarityConfig.common;
   const yearDisplay = coin.year > 0 ? coin.year : `${Math.abs(coin.year)} BC`;
 
@@ -67,8 +69,8 @@ export default function CoinDetailsModal({
           </TouchableOpacity>
 
           <View style={styles.coinCircle}>
-            {coin.imageUrl ? (
-              <Image source={{ uri: coin.imageUrl }} style={styles.coinImg} resizeMode="cover" />
+            {displayImage ? (
+              <Image source={{ uri: displayImage }} style={styles.coinImg} resizeMode="cover" />
             ) : (
               <View style={[styles.coinImgPlaceholder, { backgroundColor: rarity.color + '18' }]}>
                 <MaterialCommunityIcons name="circle-double" size={56} color={rarity.color} />
