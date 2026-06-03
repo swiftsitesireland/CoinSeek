@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Modal, ScrollView,
   TouchableOpacity, Image,
@@ -27,14 +27,23 @@ export default function CoinDetailsModal({
   onAddToCollection,
   isInCollection,
   collectionItem,
+  onRemove,
 }) {
   const [activeTab, setActiveTab] = useState('details');
+  const [imgError, setImgError] = useState(false);
+  // Controls the inline meatball-menu overlay (not a nested Modal — iOS doesn't
+  // support Modals nested inside Modals, so we use an absolute-positioned View)
+  const [menuVisible, setMenuVisible] = useState(false);
   const currency = useSelector(selectCurrency);
   const dispatch = useDispatch();
   const isFavourite = useSelector(selectIsFavourite(coin?.id));
+  useEffect(() => { setImgError(false); }, [coin?.id]);
+  // Reset menu whenever the sheet closes so it doesn't flash open on re-open
+  useEffect(() => { if (!visible) setMenuVisible(false); }, [visible]);
   if (!coin) return null;
 
   const displayImage = collectionItem?.frontImageUri || coin.imageUrl;
+  const showImg = displayImage && !imgError;
   const rarity = rarityConfig[coin.rarity] || rarityConfig.common;
   const yearDisplay = coin.year > 0 ? coin.year : `${Math.abs(coin.year)} BC`;
 
@@ -48,14 +57,44 @@ export default function CoinDetailsModal({
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={styles.container}>
 
-        {/* ── Header ──────────────────────────────────────────────── */}
-        <View style={styles.header}>
+        {/* ── Hero image ──────────────────────────────────────────── */}
+        <View style={styles.hero}>
+          {showImg ? (
+            <Image
+              source={{ uri: displayImage }}
+              style={styles.heroImg}
+              resizeMode="cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <View style={[styles.heroPlaceholder, { backgroundColor: rarity.color + '18' }]}>
+              <MaterialCommunityIcons name="circle-double" size={80} color={rarity.color} />
+            </View>
+          )}
+
+          {/* Fade into the meta block for legibility */}
+          <LinearGradient
+            colors={['transparent', 'transparent', colors.surfaceContainerLow]}
+            style={styles.heroFade}
+            pointerEvents="none"
+          />
+
           <TouchableOpacity
             style={styles.closeBtn}
             onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onClose(); }}
           >
-            <MaterialCommunityIcons name="close" size={20} color={colors.text} />
+            <MaterialCommunityIcons name="close" size={20} color="#fff" />
           </TouchableOpacity>
+
+          {/* ⋮ meatball menu — only shown when viewing a collection item */}
+          {isInCollection && onRemove && (
+            <TouchableOpacity
+              style={styles.menuBtn}
+              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setMenuVisible(true); }}
+            >
+              <MaterialCommunityIcons name="dots-vertical" size={20} color="#fff" />
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.favBtn}
@@ -64,20 +103,13 @@ export default function CoinDetailsModal({
             <MaterialCommunityIcons
               name={isFavourite ? 'heart' : 'heart-outline'}
               size={20}
-              color={isFavourite ? colors.error : colors.text}
+              color={isFavourite ? colors.error : '#fff'}
             />
           </TouchableOpacity>
+        </View>
 
-          <View style={styles.coinCircle}>
-            {displayImage ? (
-              <Image source={{ uri: displayImage }} style={styles.coinImg} resizeMode="cover" />
-            ) : (
-              <View style={[styles.coinImgPlaceholder, { backgroundColor: rarity.color + '18' }]}>
-                <MaterialCommunityIcons name="circle-double" size={56} color={rarity.color} />
-              </View>
-            )}
-          </View>
-
+        {/* ── Header ──────────────────────────────────────────────── */}
+        <View style={styles.header}>
           <View style={[styles.rarityBadge, { backgroundColor: rarity.color + '22', borderColor: rarity.color + '55' }]}>
             <Text style={[styles.rarityBadgeText, { color: rarity.color }]}>{rarity.label}</Text>
           </View>
@@ -232,6 +264,30 @@ export default function CoinDetailsModal({
             </TouchableOpacity>
           </View>
         )}
+
+        {/* ── Inline meatball menu overlay ─────────────────────────────────────
+            Rendered as an absolutely-positioned View (not a nested Modal) because
+            React Native does not support Modals inside Modals on iOS. The backdrop
+            covers the full sheet; the card sits below the ⋮ button in the hero. */}
+        {menuVisible && (
+          <>
+            <TouchableOpacity
+              style={[StyleSheet.absoluteFill, styles.menuBackdrop]}
+              onPress={() => setMenuVisible(false)}
+              activeOpacity={1}
+            />
+            <View style={styles.inlineMenu}>
+              <TouchableOpacity
+                style={styles.inlineMenuItem}
+                onPress={() => { setMenuVisible(false); onRemove(); }}
+                activeOpacity={0.7}
+              >
+                <MaterialCommunityIcons name="trash-can-outline" size={16} color={colors.error} />
+                <Text style={styles.inlineMenuLabel}>Delete Coin</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </View>
     </Modal>
   );
@@ -240,34 +296,75 @@ export default function CoinDetailsModal({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
 
+  hero: {
+    width: '100%', height: 260,
+    backgroundColor: colors.surfaceContainer,
+    position: 'relative',
+  },
+  heroImg:         { width: '100%', height: '100%' },
+  heroPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  heroFade: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, height: 80,
+  },
+
   header: {
     alignItems: 'center',
-    paddingTop: spacing.xl,
+    paddingTop: spacing.md,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.surfaceContainerLow,
   },
   closeBtn: {
-    position: 'absolute', top: spacing.lg, right: spacing.lg,
+    position: 'absolute', top: spacing.lg, right: spacing.lg, zIndex: 10,
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.surfaceContainer,
-    borderWidth: 1, borderColor: colors.outlineVariant,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  // ⋮ sits just left of the close button (36px button + 8px gap = 44px offset)
+  menuBtn: {
+    position: 'absolute', top: spacing.lg, right: spacing.lg + 44, zIndex: 10,
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center', justifyContent: 'center',
   },
   favBtn: {
     position: 'absolute', top: spacing.lg, left: spacing.lg, zIndex: 10,
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: colors.surfaceContainer,
-    borderWidth: 1, borderColor: colors.outlineVariant,
+    backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center', justifyContent: 'center',
   },
-  coinCircle: {
-    width: 120, height: 120, borderRadius: 60,
-    borderWidth: 2, borderColor: colors.primary,
-    overflow: 'hidden', marginBottom: spacing.md,
+  // Inline menu overlay (avoids nested Modal — not supported on iOS)
+  menuBackdrop: { zIndex: 100 },
+  inlineMenu: {
+    position: 'absolute',
+    // Place below the hero buttons: spacing.lg (top) + 36px (btn height) + 8px gap
+    top: spacing.lg + 44,
+    right: spacing.lg,
+    minWidth: 180,
+    backgroundColor: colors.surfaceContainerLow,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.outlineVariant,
+    overflow: 'hidden',
+    zIndex: 101,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
   },
-  coinImg:            { width: '100%', height: '100%' },
-  coinImgPlaceholder: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
+  inlineMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+  },
+  inlineMenuLabel: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 14,
+    color: colors.error,
+  },
 
   rarityBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,

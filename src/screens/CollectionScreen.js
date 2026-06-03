@@ -19,6 +19,7 @@ import { loadCollection, saveCollection } from '../services/storage';
 import { useAuth } from '../auth/AuthContext';
 import { GridCoinCard } from '../components/CoinCard';
 import CoinDetailsModal from '../components/CoinDetailsModal';
+import PopoverMenu from '../components/PopoverMenu';
 import BlurOverlay from '../components/BlurOverlay';
 import UpgradeModal from '../components/UpgradeModal';
 import { useFeatureAccess } from '../hooks/useFeatureAccess';
@@ -96,6 +97,10 @@ export default function CollectionScreen({ navigation }) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeFeature,   setUpgradeFeature]   = useState('');
   const [showAll,          setShowAll]          = useState(false);
+
+  // Meatball menu state — which card's ⋮ was tapped and where on screen
+  const [menuTarget, setMenuTarget] = useState(null); // collection item
+  const [menuAnchor, setMenuAnchor] = useState(null); // { x, y } screen coords
 
   const statsAccess  = useFeatureAccess('advancedStats');
   const { startPayment, paymentLoading } = useStripePayment();
@@ -203,7 +208,7 @@ export default function CollectionScreen({ navigation }) {
         <GridCoinCard
           item={item}
           onPress={() => setSelectedCoin(item)}
-          onInfoPress={() => setSelectedCoin(item)}
+          onMenuPress={(pos) => { setMenuAnchor(pos); setMenuTarget(item); }}
         />
       </View>
     );
@@ -371,12 +376,35 @@ export default function CollectionScreen({ navigation }) {
         </LinearGradient>
       </TouchableOpacity>
 
+      {/* Meatball menu — rendered outside FlatList so zIndex works cross-platform */}
+      <PopoverMenu
+        visible={!!menuTarget && !!menuAnchor}
+        onClose={() => { setMenuTarget(null); setMenuAnchor(null); }}
+        anchor={menuAnchor ?? { x: 0, y: 0 }}
+        items={[{
+          label: 'Delete Coin',
+          icon: 'trash-can-outline',
+          color: colors.error,
+          onPress: () => {
+            const target = menuTarget;
+            setMenuTarget(null);
+            setMenuAnchor(null);
+            handleRemove(target);
+          },
+        }]}
+      />
+
       <CoinDetailsModal
         visible={!!selectedCoin}
         coin={selectedCoin?.coin}
         collectionItem={selectedCoin}
         onClose={() => setSelectedCoin(null)}
         isInCollection
+        onRemove={() => {
+          const target = selectedCoin;
+          setSelectedCoin(null);   // dismiss sheet first so Alert renders cleanly
+          handleRemove(target);
+        }}
       />
     </View>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSelector, useDispatch } from 'react-redux';
@@ -35,14 +35,26 @@ function getMetalLabel(composition = '') {
 }
 
 // Grid card — used in the 2-column collection grid
-export function GridCoinCard({ item, onPress, onInfoPress }) {
+export function GridCoinCard({ item, onPress, onMenuPress }) {
   const { coin, condition, frontImageUri } = item;
   const currency = useSelector(selectCurrency);
   const dispatch = useDispatch();
   const isFavourite = useSelector(selectIsFavourite(coin.id));
+  // Ref used to measure the ⋮ button's screen position for the popover anchor
+  const menuBtnRef = useRef(null);
+
   function handleHeart() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     dispatch(toggleFavourite(coin.id));
+  }
+
+  function handleMenuPress() {
+    if (!onMenuPress || !menuBtnRef.current) return;
+    // measure() returns screen-absolute coords — pass them up so the parent
+    // can position the PopoverMenu directly below the tapped button
+    menuBtnRef.current.measure((_fx, _fy, _w, h, px, py) => {
+      onMenuPress({ x: px, y: py + h });
+    });
   }
   const displayImage = frontImageUri || coin.imageUrl;
   const [imgError, setImgError] = useState(false);
@@ -103,9 +115,14 @@ export function GridCoinCard({ item, onPress, onInfoPress }) {
           <Text style={styles.gridValue}>
             {formatCurrency(coin.estimatedValue.mid, currency)}
           </Text>
-          {onInfoPress && (
-            <TouchableOpacity style={styles.infoBtn} onPress={onInfoPress} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <MaterialCommunityIcons name="information-outline" size={16} color={colors.textMuted} />
+          {onMenuPress && (
+            <TouchableOpacity
+              ref={menuBtnRef}
+              style={styles.menuBtn}
+              onPress={handleMenuPress}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <MaterialCommunityIcons name="dots-vertical" size={16} color={colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -193,7 +210,7 @@ const styles = StyleSheet.create({
   gridMeta:  { fontFamily: fonts.sans, fontSize: 11, color: colors.textMuted },
   gridBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
   gridValue: { fontFamily: fonts.sansBold, fontSize: 14, color: colors.primary },
-  infoBtn:   { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
+  menuBtn:   { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
   heartBtn: {
     position: 'absolute', top: spacing.sm, right: spacing.sm,
     width: 28, height: 28, borderRadius: 14,
