@@ -3,7 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rateLimiter.ts';
 import {
   readBodyWithLimit, safeParseJson, sanitiseEmail, sanitisePlan,
-  badRequest, internalError, buildCorsHeaders, LIMITS,
+  badRequest, internalError, buildCorsHeaders, rejectUnexpectedFields, requirePost, LIMITS,
 } from '../_shared/validate.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
@@ -14,6 +14,9 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  const methodError = requirePost(req, corsHeaders);
+  if (methodError) return methodError;
 
   try {
     // ── Auth ─────────────────────────────────────────────────────────────────
@@ -42,7 +45,7 @@ Deno.serve(async (req) => {
       15,
     );
 
-    if (!allowed) return rateLimitResponse(resetInSeconds);
+    if (!allowed) return rateLimitResponse(resetInSeconds, corsHeaders);
 
     // ── Parse & validate body ─────────────────────────────────────────────────
     const { body: rawBody, error: sizeError } = await readBodyWithLimit(req, LIMITS.CHECKOUT_BODY);
@@ -51,7 +54,12 @@ Deno.serve(async (req) => {
     const { data: payload, error: jsonError } = safeParseJson(rawBody, req);
     if (jsonError) return jsonError;
 
+    // Reject unknown fields — only email and plan are expected
+    const fieldError = rejectUnexpectedFields(payload, ['email', 'plan'], req);
+    if (fieldError) return fieldError;
+
     const email = sanitiseEmail(payload.email ?? user.email);
+    if (!email) return badRequest('A valid email address is required.', req);
     const plan  = sanitisePlan(payload.plan);
 
     // ── Create session ────────────────────────────────────────────────────────
@@ -67,7 +75,7 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
-      customer_email: email ?? user.email,
+      customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
       // Use verified HTTPS App Links — custom schemes are interceptable by any
       // Android app and cannot be used as a secure payment redirect target.

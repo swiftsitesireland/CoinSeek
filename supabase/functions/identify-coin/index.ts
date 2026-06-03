@@ -3,6 +3,7 @@ import { checkRateLimit, rateLimitResponse } from '../_shared/rateLimiter.ts';
 import {
   readBodyWithLimit, safeParseJson, badRequest,
   payloadTooLarge, internalError, buildCorsHeaders,
+  rejectUnexpectedFields, requirePost, LIMITS,
 } from '../_shared/validate.ts';
 
 // gemini-1.5-flash and gemini-2.0-flash are both retired (1.5 shut down Sep 2025,
@@ -10,9 +11,6 @@ import {
 // is the current GA fast model.
 const GEMINI_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-
-// VULN-04: 10 MB limit — two base64 images won't exceed this; prevents oversized blobs
-const IMAGE_BODY_LIMIT = 10_485_760;
 
 const PROMPT = `You are an expert numismatist. Analyze these coin images (front and back if provided).
 
@@ -120,6 +118,9 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const methodError = requirePost(req, corsHeaders);
+  if (methodError) return methodError;
+
   try {
     // ── Auth ─────────────────────────────────────────────────────────────────
     const authHeader = req.headers.get('Authorization');
@@ -151,14 +152,19 @@ Deno.serve(async (req) => {
       15,
     );
 
-    if (!allowed) return rateLimitResponse(resetInSeconds);
+    if (!allowed) return rateLimitResponse(resetInSeconds, corsHeaders);
 
     // ── VULN-04: Body size limit ───────────────────────────────────────────────
-    const { body: rawBody, error: sizeError } = await readBodyWithLimit(req, IMAGE_BODY_LIMIT);
+    // LIMITS.IDENTIFY_BODY = 10 MB — two base64 images won't exceed this
+    const { body: rawBody, error: sizeError } = await readBodyWithLimit(req, LIMITS.IDENTIFY_BODY);
     if (sizeError) return sizeError;
 
     const { data: payload, error: jsonError } = safeParseJson(rawBody, req);
     if (jsonError) return jsonError;
+
+    // Reject any fields beyond the two image slots — strict schema enforcement
+    const fieldError = rejectUnexpectedFields(payload, ['frontBase64', 'backBase64'], req);
+    if (fieldError) return fieldError;
 
     const frontBase64 = payload.frontBase64;
     const backBase64  = payload.backBase64;
@@ -169,9 +175,11 @@ Deno.serve(async (req) => {
 
     // ── VULN-15: Validate base64 encodes a real image (JPEG or PNG) ───────────
     if (!isValidImageBase64(frontBase64)) {
+      console.warn('[identify-coin] Image validation failed: frontBase64 is not a valid JPEG/PNG for user:', user.id);
       return badRequest('frontBase64 must be a JPEG or PNG image.', req);
     }
     if (backBase64 && typeof backBase64 === 'string' && !isValidImageBase64(backBase64)) {
+      console.warn('[identify-coin] Image validation failed: backBase64 is not a valid JPEG/PNG for user:', user.id);
       return badRequest('backBase64 must be a JPEG or PNG image.', req);
     }
 
@@ -233,7 +241,7 @@ Deno.serve(async (req) => {
     );
     if (!globalLimit.allowed) {
       console.error('[identify-coin] GLOBAL daily scan cap reached — possible abuse');
-      return rateLimitResponse(globalLimit.resetInSeconds);
+      return rateLimitResponse(globalLimit.resetInSeconds, corsHeaders);
     }
 
     const geminiRes = await fetch(`${GEMINI_URL}?key=${geminiKey}`, {

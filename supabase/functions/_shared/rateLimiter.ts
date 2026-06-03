@@ -50,7 +50,9 @@ export async function checkRateLimit(
 
   if (error) {
     console.error('[rate-limit] RPC error:', error.message);
-    // VULN-05: fail CLOSED (deny) so a DB outage cannot be used to bypass rate limits
+    // VULN-05: fail CLOSED (deny) — a DB outage must not become a rate-limit bypass.
+    // Intentionally returns allowed:false even though this blocks legitimate traffic;
+    // accepting a brief outage is safer than allowing unbounded requests.
     return { allowed: false, remaining: 0, resetInSeconds };
   }
 
@@ -65,19 +67,29 @@ export async function checkRateLimit(
 }
 
 /**
- * Standard 429 response body with a Retry-After header.
+ * Standard 429 response with a Retry-After header.
+ *
+ * Pass the request-scoped `corsHeaders` (from buildCorsHeaders(req)) so the
+ * 429 honours the same strict origin whitelist as every other response.
+ * Omitting corsHeaders falls back to Access-Control-Allow-Origin: * only as a
+ * last resort (e.g. unit tests without a Request object).
  */
-export function rateLimitResponse(resetInSeconds: number): Response {
+export function rateLimitResponse(
+  resetInSeconds: number,
+  corsHeaders?: Record<string, string>,
+): Response {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Retry-After': String(resetInSeconds),
+    // Use caller-supplied CORS headers (scoped to the request's origin) when
+    // available; fall back to wildcard only when there is no request context.
+    ...(corsHeaders ?? {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    }),
+  };
   return new Response(
     JSON.stringify({ error: 'Too many requests — please try again later.' }),
-    {
-      status: 429,
-      headers: {
-        'Content-Type': 'application/json',
-        'Retry-After': String(resetInSeconds),
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      },
-    },
+    { status: 429, headers },
   );
 }

@@ -10,7 +10,7 @@
 
 import Stripe from 'npm:stripe@14';
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { buildCorsHeaders, internalError } from '../_shared/validate.ts';
+import { buildCorsHeaders, internalError, requirePost, rejectBody } from '../_shared/validate.ts';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rateLimiter.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
@@ -22,6 +22,9 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  const methodError = requirePost(req, corsHeaders);
+  if (methodError) return methodError;
+
   function json(body: unknown, status = 200): Response {
     return new Response(JSON.stringify(body), {
       status,
@@ -30,6 +33,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Reject any request body — reads actual bytes, not just the Content-Length header
+    const bodyError = await rejectBody(req, corsHeaders);
+    if (bodyError) return bodyError;
+
     // ── Auth ─────────────────────────────────────────────────────────────────
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) return new Response('Unauthorized', { status: 401, headers: corsHeaders });
@@ -57,7 +64,7 @@ Deno.serve(async (req) => {
       3,
       60,
     );
-    if (!allowed) return rateLimitResponse(resetInSeconds);
+    if (!allowed) return rateLimitResponse(resetInSeconds, corsHeaders);
 
     // ── Load subscription from DB ─────────────────────────────────────────────
     const { data: sub, error: dbError } = await adminClient

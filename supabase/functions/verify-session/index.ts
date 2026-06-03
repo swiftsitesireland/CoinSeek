@@ -3,7 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rateLimiter.ts';
 import {
   readBodyWithLimit, safeParseJson, sanitiseSessionId,
-  badRequest, internalError, buildCorsHeaders, LIMITS,
+  badRequest, internalError, buildCorsHeaders, rejectUnexpectedFields, requirePost, LIMITS,
 } from '../_shared/validate.ts';
 
 const stripe   = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
@@ -18,6 +18,9 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+
+  const methodError = requirePost(req, corsHeaders);
+  if (methodError) return methodError;
 
   try {
     // ── Auth ─────────────────────────────────────────────────────────────────
@@ -40,7 +43,7 @@ Deno.serve(async (req) => {
       15,
     );
 
-    if (!allowed) return rateLimitResponse(resetInSeconds);
+    if (!allowed) return rateLimitResponse(resetInSeconds, corsHeaders);
 
     // ── Parse & validate body ─────────────────────────────────────────────────
     const { body: rawBody, error: sizeError } = await readBodyWithLimit(req, LIMITS.VERIFY_BODY);
@@ -48,6 +51,10 @@ Deno.serve(async (req) => {
 
     const { data: payload, error: jsonError } = safeParseJson(rawBody, req);
     if (jsonError) return jsonError;
+
+    // Reject unknown fields — only sessionId is expected
+    const fieldError = rejectUnexpectedFields(payload, ['sessionId'], req);
+    if (fieldError) return fieldError;
 
     const sessionId = sanitiseSessionId(payload.sessionId);
     if (!sessionId) return badRequest('Invalid or missing sessionId.', req);

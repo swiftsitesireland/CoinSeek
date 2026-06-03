@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { escapeHtml, requirePost, rejectBody } from '../_shared/validate.ts';
 
 // Admin client — can read auth.users
 const supabaseAdmin = createClient(
@@ -63,7 +64,7 @@ function twoDayEmail(email: string): string {
         </td></tr>
         <tr><td style="padding:20px 40px;border-top:1px solid #2a2a28;text-align:center;">
           <p style="margin:0;font-size:12px;color:#555;">
-            You're receiving this because you signed up for CoinSeek with ${email}.<br>
+            You're receiving this because you signed up for CoinSeek with ${escapeHtml(email)}.<br>
             <a href="https://coinseek.app" style="color:#f2ca50;text-decoration:none;">coinseek.app</a>
           </p>
         </td></tr>
@@ -124,7 +125,7 @@ function oneDayEmail(email: string): string {
         </td></tr>
         <tr><td style="padding:20px 40px;border-top:1px solid #2a2a28;text-align:center;">
           <p style="margin:0;font-size:12px;color:#555;">
-            You're receiving this because you signed up for CoinSeek with ${email}.<br>
+            You're receiving this because you signed up for CoinSeek with ${escapeHtml(email)}.<br>
             <a href="https://coinseek.app" style="color:#f2ca50;text-decoration:none;">coinseek.app</a>
           </p>
         </td></tr>
@@ -156,6 +157,15 @@ function maskEmail(email: string): string {
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
+  // Only POST — cron callers use POST; any other method is unexpected
+  const methodError = requirePost(req);
+  if (methodError) return methodError;
+
+  // Reject any body — reads actual bytes, not just the Content-Length header
+  // (Content-Length can be absent on HTTP/2 and spoofed on HTTP/1.1)
+  const bodyError = await rejectBody(req);
+  if (bodyError) return bodyError;
+
   // Only allow requests that carry the service role key — rejects public callers
   const authHeader = req.headers.get('Authorization') ?? '';
   const token      = authHeader.replace('Bearer ', '').trim();
@@ -163,14 +173,6 @@ Deno.serve(async (req) => {
 
   if (!token || !timingSafeEqual(token, serviceKey)) {
     return new Response('Unauthorized', { status: 401 });
-  }
-
-  // Reject any body — this endpoint takes no input
-  const contentLength = req.headers.get('content-length');
-  if (contentLength && parseInt(contentLength, 10) > 0) {
-    return new Response(JSON.stringify({ error: 'No body expected.' }), {
-      status: 400, headers: { 'Content-Type': 'application/json' },
-    });
   }
 
   try {

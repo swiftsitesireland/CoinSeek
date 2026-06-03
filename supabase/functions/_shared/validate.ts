@@ -6,9 +6,11 @@
 
 // ─── Size limits ──────────────────────────────────────────────────────────────
 export const LIMITS = {
-  CHECKOUT_BODY:  2_048,        // 2 KB  — create-checkout
-  VERIFY_BODY:    2_048,        // 2 KB  — verify-session
-  WEBHOOK_BODY:   524_288,      // 512 KB — stripe-webhook (events can be large)
+  AUTH_BODY:      4_096,         // 4 KB  — auth-proxy (email + password + username)
+  CHECKOUT_BODY:  2_048,         // 2 KB  — create-checkout
+  VERIFY_BODY:    2_048,         // 2 KB  — verify-session
+  WEBHOOK_BODY:   524_288,       // 512 KB — stripe-webhook (events can be large)
+  IDENTIFY_BODY:  10_485_760,    // 10 MB — identify-coin (two base64 images)
 };
 
 // ─── CORS helpers ─────────────────────────────────────────────────────────────
@@ -137,4 +139,104 @@ export function sanitiseSessionId(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
   const trimmed = raw.trim();
   return SESSION_ID_RE.test(trimmed) ? trimmed : null;
+}
+
+// ─── Strict schema enforcement ────────────────────────────────────────────────
+
+/**
+ * Returns a 400 response if `data` contains any key not in `allowed`.
+ * Call this immediately after safeParseJson to reject unexpected fields before
+ * any per-field validation runs. Returning null means all fields are allowed.
+ */
+export function rejectUnexpectedFields(
+  data: Record<string, unknown>,
+  allowed: readonly string[],
+  req?: Request,
+): Response | null {
+  const allowedSet = new Set(allowed);
+  const unexpected = Object.keys(data).filter((k) => !allowedSet.has(k));
+  if (unexpected.length > 0) {
+    return badRequest(`Unexpected field(s): ${unexpected.join(', ')}.`, req);
+  }
+  return null;
+}
+
+// ─── HTML escaping ────────────────────────────────────────────────────────────
+
+/**
+ * Escapes the five HTML-special characters so user-controlled strings (e.g.
+ * email addresses) cannot inject markup into HTML email templates.
+ */
+export function escapeHtml(raw: string): string {
+  return raw
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// ─── Method enforcement ───────────────────────────────────────────────────────
+
+/**
+ * Returns a 405 response if the request method is not POST.
+ * Call before any auth or body parsing — OPTIONS is already handled by the
+ * caller's preflight block and never reaches this check.
+ */
+export function requirePost(req: Request, corsHeaders?: Record<string, string>): Response | null {
+  if (req.method === 'POST') return null;
+  return new Response(
+    JSON.stringify({ error: 'Method not allowed.' }),
+    {
+      status: 405,
+      headers: {
+        ...(corsHeaders ?? {}),
+        'Content-Type': 'application/json',
+        Allow: 'POST',
+      },
+    },
+  );
+}
+
+// ─── No-body enforcement ──────────────────────────────────────────────────────
+
+/**
+ * Returns a 400 response if the request carries any body.
+ * Reads the actual bytes — the Content-Length header alone is unreliable on
+ * HTTP/2 and can be absent or spoofed.
+ * Use for endpoints that take no input (cancel-subscription, delete-account,
+ * export-data, send-trial-reminder).
+ */
+export async function rejectBody(req: Request, corsHeaders?: Record<string, string>): Promise<Response | null> {
+  const text = await req.text();
+  if (text.length === 0) return null;
+  return new Response(
+    JSON.stringify({ error: 'This endpoint does not accept a request body.' }),
+    {
+      status: 400,
+      headers: { ...(corsHeaders ?? {}), 'Content-Type': 'application/json' },
+    },
+  );
+}
+
+// ─── Password validation ──────────────────────────────────────────────────────
+
+// 128-char ceiling prevents bcrypt-DoS — bcrypt truncates at 72 bytes but
+// some implementations hash the full string before truncating, making very
+// long passwords expensive to process.
+const PASSWORD_MIN = 8;
+const PASSWORD_MAX = 128;
+
+/**
+ * Validates a password value against length and complexity rules.
+ * Returns a human-readable error string on the first violation, or null if valid.
+ * Never logs or echoes the password value.
+ */
+export function validatePassword(raw: unknown): string | null {
+  if (typeof raw !== 'string') return 'password must be a string.';
+  if (raw.length < PASSWORD_MIN) return `Password must be at least ${PASSWORD_MIN} characters.`;
+  if (raw.length > PASSWORD_MAX) return `Password must be at most ${PASSWORD_MAX} characters.`;
+  if (!/[A-Za-z]/.test(raw)) return 'Password must contain at least one letter.';
+  if (!/[0-9]/.test(raw)) return 'Password must contain at least one number.';
+  return null;
 }

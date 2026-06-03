@@ -10,10 +10,14 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rateLimiter.ts';
-import { readBodyWithLimit, safeParseJson, buildCorsHeaders, sanitiseEmail } from '../_shared/validate.ts';
+import {
+  readBodyWithLimit, safeParseJson, buildCorsHeaders, sanitiseEmail,
+  rejectUnexpectedFields, requirePost, LIMITS,
+} from '../_shared/validate.ts';
 
-// VULN-11: 4 KB is generous for auth payloads (email + password + username)
-const AUTH_BODY_LIMIT = 4_096;
+// Max password length — prevents bcrypt DoS if the body-size limit ever changes.
+// bcrypt is deliberately slow; hashing a 1 MB string would stall the function.
+const MAX_PASSWORD_LEN = 128;
 
 // VULN-08 / M-05: username must be 3-30 alphanumeric/underscore/dot/hyphen chars.
 // Display names (full names with spaces) are stored separately.
@@ -138,6 +142,8 @@ Deno.serve(async (req) => {
   }
 
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const methodError = requirePost(req, corsHeaders);
+  if (methodError) return methodError;
 
   // Service role client — used for rate limiting (bypasses RLS on rate_limit_log)
   const adminClient = createClient(
@@ -150,11 +156,20 @@ Deno.serve(async (req) => {
 
   try {
     // ── VULN-11: Body size limit ───────────────────────────────────────────────
-    const { body: rawBody, error: sizeError } = await readBodyWithLimit(req, AUTH_BODY_LIMIT);
+    // LIMITS.AUTH_BODY = 4 KB — generous for email + password + username
+    const { body: rawBody, error: sizeError } = await readBodyWithLimit(req, LIMITS.AUTH_BODY);
     if (sizeError) return sizeError;
 
     const { data: bodyData, error: jsonError } = safeParseJson(rawBody, req);
     if (jsonError) return jsonError;
+
+    // Reject any fields not on the whitelist — strict schema enforcement
+    const fieldError = rejectUnexpectedFields(
+      bodyData,
+      ['action', 'email', 'password', 'username'],
+      req,
+    );
+    if (fieldError) return fieldError;
 
     const { action, email, password, username } = bodyData as Record<string, unknown>;
 
@@ -162,11 +177,13 @@ Deno.serve(async (req) => {
     // H-01: whitelist action before anything else — prevents rate limit pollution
     const VALID_ACTIONS = new Set(['signin', 'signup', 'reset']);
     if (!action || typeof action !== 'string' || !VALID_ACTIONS.has(action)) {
+      console.warn('[auth-proxy] Validation failed: invalid action value from IP:', getClientIp(req));
       return json({ error: 'Invalid request.' }, 400);
     }
     // H-03: use the shared RFC-compliant validator, not a bare @-check
     const normalizedEmail = sanitiseEmail(email);
     if (!normalizedEmail) {
+      console.warn('[auth-proxy] Validation failed: invalid email for action:', action, 'from IP:', getClientIp(req));
       return json({ error: 'Valid email is required' }, 400);
     }
 
@@ -193,7 +210,7 @@ Deno.serve(async (req) => {
     const ipResult  = await checkRateLimit(adminClient, ipLimitId, MAX_IP_ATTEMPTS, AUTH_WINDOW_MINUTES);
     if (!ipResult.allowed) {
       console.warn(`[auth-proxy] IP rate limit hit: ${clientIp}`);
-      return rateLimitResponse(ipResult.resetInSeconds);
+      return rateLimitResponse(ipResult.resetInSeconds, corsHeaders);
     }
 
     // ── Rate limit 2: per email (stops brute force on a specific account) ─────
@@ -201,13 +218,22 @@ Deno.serve(async (req) => {
     const emailResult  = await checkRateLimit(adminClient, emailLimitId, MAX_AUTH_ATTEMPTS, AUTH_WINDOW_MINUTES);
     if (!emailResult.allowed) {
       console.warn(`[auth-proxy] Email rate limit hit: ${emailLimitId}`);
-      return rateLimitResponse(emailResult.resetInSeconds);
+      return rateLimitResponse(emailResult.resetInSeconds, corsHeaders);
     }
 
     // ── Sign in ───────────────────────────────────────────────────────────────
     if (action === 'signin') {
       // H-02: type-check prevents non-string values (objects, arrays) being forwarded
-      if (!password || typeof password !== 'string') return json({ error: 'password is required' }, 400);
+      if (!password || typeof password !== 'string') {
+        console.warn('[auth-proxy] Validation failed: missing password on signin from IP:', getClientIp(req));
+        return json({ error: 'password is required' }, 400);
+      }
+      // Cap password length — bcrypt is intentionally slow and hashing a huge
+      // string could stall the function even with the body size limit in place.
+      if (password.length > MAX_PASSWORD_LEN) {
+        console.warn('[auth-proxy] Validation failed: oversized password on signin from IP:', getClientIp(req));
+        return json({ error: 'Invalid email or password' }, 401);
+      }
 
       const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
         method: 'POST',
@@ -227,10 +253,21 @@ Deno.serve(async (req) => {
 
     // ── Sign up ───────────────────────────────────────────────────────────────
     if (action === 'signup') {
-      if (!password || typeof password !== 'string') return json({ error: 'password is required' }, 400);
-      // VULN-12: require length + at least one letter and one digit
-      if (password.length < 8) return json({ error: 'Password must be at least 8 characters' }, 400);
+      if (!password || typeof password !== 'string') {
+        console.warn('[auth-proxy] Validation failed: missing password on signup from IP:', getClientIp(req));
+        return json({ error: 'password is required' }, 400);
+      }
+      // VULN-12: enforce 8–128 character range + complexity
+      if (password.length > MAX_PASSWORD_LEN) {
+        console.warn('[auth-proxy] Validation failed: oversized password on signup from IP:', getClientIp(req));
+        return json({ error: `Password must be at most ${MAX_PASSWORD_LEN} characters` }, 400);
+      }
+      if (password.length < 8) {
+        console.warn('[auth-proxy] Validation failed: password too short on signup from IP:', getClientIp(req));
+        return json({ error: 'Password must be at least 8 characters' }, 400);
+      }
       if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+        console.warn('[auth-proxy] Validation failed: password complexity on signup from IP:', getClientIp(req));
         return json({ error: 'Password must contain at least one letter and one number' }, 400);
       }
 
