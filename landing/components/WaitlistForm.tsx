@@ -51,7 +51,7 @@ export default function WaitlistForm({ buttonText = '→ JOIN WAITLIST' }: Props
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
           required
-          className="bg-[rgba(255,184,0,0.02)] border-none text-[#ccc] font-mono text-sm px-4 py-3 outline-none flex-1 placeholder:text-[#333] min-w-0"
+          className="bg-[rgba(255,184,0,0.02)] border-none text-[#ccc] font-mono text-sm px-4 py-3 outline-none flex-1 placeholder:text-[#555] min-w-0"
         />
         <button
           type="submit"
@@ -63,7 +63,7 @@ export default function WaitlistForm({ buttonText = '→ JOIN WAITLIST' }: Props
       </div>
 
       <div className="flex items-center gap-2.5">
-        <span className="font-mono text-[9px] text-[#444] tracking-[2px] shrink-0">I&apos;M ON</span>
+        <span className="font-mono text-[9px] text-[#888] tracking-[2px] shrink-0">I&apos;M ON</span>
         <select
           value={platform}
           onChange={(e) => setPlatform(e.target.value)}
