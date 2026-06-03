@@ -12,7 +12,7 @@ const config: Config = {
         mono: ['var(--font-dm-mono)', 'monospace'],
       },
       colors: {
-        amber: '#FFB800',
+        brand: '#FFB800',
         surface: '#0d0d0d',
       },
     },
