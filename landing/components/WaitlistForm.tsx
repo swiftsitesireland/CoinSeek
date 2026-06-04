@@ -67,6 +67,7 @@ export default function WaitlistForm({ buttonText = '→ JOIN WAITLIST' }: Props
         <select
           value={platform}
           onChange={(e) => setPlatform(e.target.value)}
+          required
           className="bg-[rgba(255,184,0,0.03)] border border-[rgba(255,184,0,0.18)] rounded-[3px] text-[#888] font-mono text-[10px] py-1.5 px-2.5 outline-none cursor-pointer appearance-none min-w-[110px]"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23FFB80066' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
