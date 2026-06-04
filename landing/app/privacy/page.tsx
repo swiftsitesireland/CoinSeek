@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — Coin Collector',
-  description: 'How Coin Collector collects, uses, and protects your personal data.',
+  title: 'Privacy Policy — Coin Seek',
+  description: 'How Coin Seek collects, uses, and protects your personal data.',
 }
 
 export default function PrivacyPolicy() {
@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
       <header className="border-b border-[rgba(255,184,0,0.08)] px-8 py-4">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
           <Link href="/" className="font-mono text-[#FFB800] text-sm tracking-[3px] hover:opacity-80 transition-opacity">
-            COIN//COLLECTOR
+            COIN//SEEK
           </Link>
           <Link href="/" className="font-mono text-[11px] text-[#888] tracking-[2px] hover:text-[#FFB800] transition-colors">
             ← BACK
@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-white font-bold text-base mb-3 font-mono tracking-wider">1. WHO WE ARE</h2>
             <p>
-              Coin Collector ("we", "us", "our") is an AI-powered coin identification service. This policy
+              Coin Seek ("we", "us", "our") is an AI-powered coin identification service. This policy
               explains what personal data we collect when you join our waitlist, how we use it, and your rights
               over it.
             </p>
@@ -176,7 +176,7 @@ export default function PrivacyPolicy() {
 
       <footer className="border-t border-[rgba(255,184,0,0.08)] px-8 py-4 mt-8">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <span className="font-mono text-[#2a2a2a] text-[10px] tracking-[2px]">COIN//COLLECTOR</span>
+          <span className="font-mono text-[#2a2a2a] text-[10px] tracking-[2px]">COIN//SEEK</span>
           <div className="flex gap-6">
             <Link href="/privacy" className="font-mono text-[9px] text-[#FFB800] tracking-[1px]">PRIVACY</Link>
             <Link href="/terms" className="font-mono text-[9px] text-[#555] hover:text-[#FFB800] tracking-[1px] transition-colors">TERMS</Link>

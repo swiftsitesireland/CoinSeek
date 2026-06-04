@@ -17,22 +17,22 @@ const dmMono = DM_Mono({
 const SITE_URL = 'https://coin-seek-tau.vercel.app'
 
 export const metadata: Metadata = {
-  title: 'Coin Collector — Identify Any Coin Instantly',
+  title: 'Coin Seek — Identify Any Coin Instantly',
   description:
     'AI-powered coin identification. Point your camera at any coin and instantly know its name, rarity, and market value. Join the waitlist.',
   metadataBase: new URL(SITE_URL),
   icons: { icon: '/favicon.png' },
   openGraph: {
-    title: 'Coin Collector — Identify Any Coin Instantly',
+    title: 'Coin Seek — Identify Any Coin Instantly',
     description:
       'AI-powered coin identification. Point your camera at any coin and instantly know its name, rarity, and market value. Join the waitlist.',
     url: SITE_URL,
-    siteName: 'Coin Collector',
+    siteName: 'Coin Seek',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Coin Collector — Identify Any Coin Instantly',
+    title: 'Coin Seek — Identify Any Coin Instantly',
     description:
       'AI-powered coin identification. Point your camera at any coin and instantly know its name, rarity, and market value. Join the waitlist.',
   },

@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — Coin Collector',
-  description: 'Terms and conditions for using the Coin Collector waitlist and application.',
+  title: 'Terms of Service — Coin Seek',
+  description: 'Terms and conditions for using the Coin Seek waitlist and application.',
 }
 
 export default function TermsOfService() {
@@ -12,7 +12,7 @@ export default function TermsOfService() {
       <header className="border-b border-[rgba(255,184,0,0.08)] px-8 py-4">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
           <Link href="/" className="font-mono text-[#FFB800] text-sm tracking-[3px] hover:opacity-80 transition-opacity">
-            COIN//COLLECTOR
+            COIN//SEEK
           </Link>
           <Link href="/" className="font-mono text-[11px] text-[#888] tracking-[2px] hover:text-[#FFB800] transition-colors">
             ← BACK
@@ -32,11 +32,11 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-white font-bold text-base mb-3 font-mono tracking-wider">1. ACCEPTANCE</h2>
             <p>
-              By accessing this website or joining the Coin Collector waitlist, you agree to be bound by these
+              By accessing this website or joining the Coin Seek waitlist, you agree to be bound by these
               Terms of Service. If you do not agree, do not use the service.
             </p>
             <p className="mt-3">
-              These terms apply to the pre-launch waitlist and, once available, the Coin Collector mobile
+              These terms apply to the pre-launch waitlist and, once available, the Coin Seek mobile
               application ("the App"). Questions? Email{' '}
               <a href="mailto:swiftsitesireland@gmail.com" className="text-[#FFB800] hover:underline">
                 swiftsitesireland@gmail.com
@@ -47,7 +47,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-white font-bold text-base mb-3 font-mono tracking-wider">2. THE SERVICE</h2>
             <p>
-              Coin Collector is an AI-powered mobile application that helps users identify coins, estimate
+              Coin Seek is an AI-powered mobile application that helps users identify coins, estimate
               rarity, and obtain indicative market values. The service is currently in pre-launch; joining the
               waitlist does not guarantee access, a specific launch date, or any particular features.
             </p>
@@ -111,7 +111,7 @@ export default function TermsOfService() {
             <h2 className="text-white font-bold text-base mb-3 font-mono tracking-wider">6. INTELLECTUAL PROPERTY</h2>
             <p>
               All content on this website — including text, graphics, logos, and software — is owned by or
-              licensed to Coin Collector and is protected by applicable intellectual property laws. You may not
+              licensed to Coin Seek and is protected by applicable intellectual property laws. You may not
               reproduce, distribute, or create derivative works without our prior written consent.
             </p>
           </section>
@@ -119,7 +119,7 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-white font-bold text-base mb-3 font-mono tracking-wider">7. LIMITATION OF LIABILITY</h2>
             <p>
-              To the maximum extent permitted by law, Coin Collector and its operators shall not be liable for
+              To the maximum extent permitted by law, Coin Seek and its operators shall not be liable for
               any indirect, incidental, special, consequential, or punitive damages arising from your use of
               (or inability to use) the service.
             </p>
@@ -174,7 +174,7 @@ export default function TermsOfService() {
 
       <footer className="border-t border-[rgba(255,184,0,0.08)] px-8 py-4 mt-8">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <span className="font-mono text-[#2a2a2a] text-[10px] tracking-[2px]">COIN//COLLECTOR</span>
+          <span className="font-mono text-[#2a2a2a] text-[10px] tracking-[2px]">COIN//SEEK</span>
           <div className="flex gap-6">
             <Link href="/privacy" className="font-mono text-[9px] text-[#555] hover:text-[#FFB800] tracking-[1px] transition-colors">PRIVACY</Link>
             <Link href="/terms" className="font-mono text-[9px] text-[#FFB800] tracking-[1px]">TERMS</Link>

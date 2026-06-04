@@ -8,14 +8,14 @@ import type { WaitlistResponse } from '@/lib/types'
 const MAX_BODY_BYTES = 512
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Coin Collector <noreply@coincollector.app>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Coin Seek <noreply@coincollector.app>'
 
 async function sendConfirmationEmail(to: string): Promise<void> {
   if (!resend) return
   await resend.emails.send({
     from: FROM_EMAIL,
     to,
-    subject: "You're on the Coin Collector waitlist",
+    subject: "You're on the Coin Seek waitlist",
     html: `
       <div style="font-family:monospace;background:#0d0d0d;color:#fff;padding:40px;max-width:480px;margin:0 auto">
         <p style="color:#FFB800;font-size:11px;letter-spacing:2px;margin-bottom:24px">// COIN COLLECTOR</p>
@@ -30,7 +30,7 @@ async function sendConfirmationEmail(to: string): Promise<void> {
         </div>
       </div>
     `,
-    text: `You're on the Coin Collector waitlist.\n\nWe'll email you the moment the app goes live. No spam, ever.\n\nIf you didn't sign up for this, you can safely ignore this email.`,
+    text: `You're on the Coin Seek waitlist.\n\nWe'll email you the moment the app goes live. No spam, ever.\n\nIf you didn't sign up for this, you can safely ignore this email.`,
   })
 }
 
