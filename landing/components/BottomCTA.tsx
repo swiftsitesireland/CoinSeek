@@ -14,6 +14,7 @@ export default function BottomCTA() {
           We&apos;ll notify you the moment the app launches. No spam, ever.
         </p>
         <WaitlistForm buttonText="→ NOTIFY ME" />
+        <p className="font-mono text-[11px] text-[#666] tracking-[0.5px] mt-3">No spam, ever.</p>
       </div>
     </section>
   )

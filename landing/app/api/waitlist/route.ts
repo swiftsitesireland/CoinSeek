@@ -1,10 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
 import { getSupabase } from '@/lib/supabase'
 import { validateWaitlistInput } from '@/lib/validation'
 import { checkRateLimit } from '@/lib/rateLimiter'
 import type { WaitlistResponse } from '@/lib/types'
 
 const MAX_BODY_BYTES = 512
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? 'Coin Collector <noreply@coincollector.app>'
+
+async function sendConfirmationEmail(to: string): Promise<void> {
+  if (!resend) return
+  await resend.emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: "You're on the Coin Collector waitlist",
+    html: `
+      <div style="font-family:monospace;background:#0d0d0d;color:#fff;padding:40px;max-width:480px;margin:0 auto">
+        <p style="color:#FFB800;font-size:11px;letter-spacing:2px;margin-bottom:24px">// COIN COLLECTOR</p>
+        <h1 style="font-size:28px;font-weight:900;letter-spacing:-1px;margin:0 0 12px">You&rsquo;re on the list.</h1>
+        <p style="color:#888;font-size:13px;line-height:1.6;margin:0 0 32px">
+          We&rsquo;ll email you the moment the app goes live. No spam, ever &mdash; just the launch notification.
+        </p>
+        <div style="border-top:1px solid rgba(255,184,0,0.15);padding-top:20px">
+          <p style="color:#555;font-size:11px;letter-spacing:1px;margin:0">
+            If you didn&rsquo;t sign up for this, you can safely ignore this email.
+          </p>
+        </div>
+      </div>
+    `,
+    text: `You're on the Coin Collector waitlist.\n\nWe'll email you the moment the app goes live. No spam, ever.\n\nIf you didn't sign up for this, you can safely ignore this email.`,
+  })
+}
 
 const ALLOWED_ORIGIN =
   process.env.NEXT_PUBLIC_APP_URL ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null)
@@ -87,6 +115,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<WaitlistRespo
     console.error('[waitlist] upsert failed', { code: error.code })
     return NextResponse.json({ success: false, error: 'Failed to save. Try again.' }, { status: 500, headers: cors })
   }
+
+  sendConfirmationEmail(result.email).catch(() => {
+    console.error('[waitlist] confirmation email failed for', result.email.slice(0, 3) + '***')
+  })
 
   return NextResponse.json({ success: true }, { headers: cors })
 }

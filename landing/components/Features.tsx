@@ -12,7 +12,7 @@ const FEATURES = [
   {
     num: '03',
     title: 'Market Value',
-    desc: 'Live rarity scores and pricing data so you always know what your collection is worth.',
+    desc: 'Rarity scores and estimated market values so you always know what your collection is worth.',
   },
 ]
 
