@@ -1,20 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 import { validateWaitlistInput } from '@/lib/validation'
+import { checkRateLimit } from '@/lib/rateLimiter'
 import type { WaitlistResponse } from '@/lib/types'
 
+const MAX_BODY_BYTES = 512
+
+const ALLOWED_ORIGIN =
+  process.env.NEXT_PUBLIC_APP_URL ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : null)
+
+function corsHeaders(origin: string | null): Record<string, string> {
+  if (!ALLOWED_ORIGIN || origin !== ALLOWED_ORIGIN) return {}
+  return {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  }
+}
+
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get('origin')
+  return new NextResponse(null, { status: 204, headers: corsHeaders(origin) })
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse<WaitlistResponse>> {
+  const origin = req.headers.get('origin')
+  const cors = corsHeaders(origin)
+
+  const contentType = req.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    return NextResponse.json({ success: false, error: 'Unsupported content type' }, { status: 415, headers: cors })
+  }
+
+  // Take the LAST IP from x-forwarded-for — Vercel appends the real client IP,
+  // so attackers who prepend fake IPs can't influence this value.
+  const forwarded = req.headers.get('x-forwarded-for')
+  const ip = forwarded
+    ? forwarded.split(',').at(-1)!.trim()
+    : (req.headers.get('x-real-ip') ?? 'unknown')
+
+  const rate = await checkRateLimit(ip)
+  if (!rate.allowed) {
+    return NextResponse.json(
+      { success: false, error: `Too many requests. Try again in ${rate.retryAfterSeconds}s.` },
+      { status: 429, headers: { ...cors, 'Retry-After': String(rate.retryAfterSeconds) } }
+    )
+  }
+
+  // Stream body — reject as soon as we exceed the size limit
+  let text = ''
+  try {
+    if (!req.body) throw new Error('No body')
+    const reader = req.body.getReader()
+    const decoder = new TextDecoder()
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      text += decoder.decode(value, { stream: !done })
+      if (text.length > MAX_BODY_BYTES) {
+        reader.cancel()
+        return NextResponse.json({ success: false, error: 'Payload too large' }, { status: 413, headers: cors })
+      }
+    }
+  } catch {
+    return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400, headers: cors })
+  }
+
   let body: unknown
   try {
-    body = await req.json()
+    body = JSON.parse(text)
   } catch {
-    return NextResponse.json({ success: false, error: 'Invalid JSON' }, { status: 400 })
+    return NextResponse.json({ success: false, error: 'Invalid JSON' }, { status: 400, headers: cors })
   }
 
   const result = validateWaitlistInput(body)
-
   if ('error' in result) {
-    return NextResponse.json({ success: false, error: result.error }, { status: 400 })
+    return NextResponse.json({ success: false, error: result.error }, { status: 400, headers: cors })
   }
 
   const { error } = await getSupabase()
@@ -22,9 +83,10 @@ export async function POST(req: NextRequest): Promise<NextResponse<WaitlistRespo
     .upsert({ email: result.email, platform: result.platform }, { onConflict: 'email' })
 
   if (error) {
-    console.error('Supabase upsert error:', error.message)
-    return NextResponse.json({ success: false, error: 'Failed to save. Try again.' }, { status: 500 })
+    // Log only error code — never log error.message/details which can leak schema info
+    console.error('[waitlist] upsert failed', { code: error.code })
+    return NextResponse.json({ success: false, error: 'Failed to save. Try again.' }, { status: 500, headers: cors })
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true }, { headers: cors })
 }

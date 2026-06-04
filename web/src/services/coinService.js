@@ -1,12 +1,15 @@
 import { supabase } from './supabase'
 
-export async function getCoinsByUserId() {
-  const { data, error } = await supabase
+export async function getCoinsByUserId(page = 0, pageSize = 20) {
+  const from = page * pageSize
+  const to = from + pageSize - 1
+  const { data, error, count } = await supabase
     .from('user_coins')
-    .select('*')
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
+    .range(from, to)
   if (error) throw error
-  return data
+  return { data, count, hasMore: to < (count ?? 0) - 1 }
 }
 
 export async function addCoin(coinData) {
@@ -36,23 +39,29 @@ export async function deleteCoin(coinId) {
   if (error) throw error
 }
 
-export async function searchCoins(query) {
-  const { data, error } = await supabase
+export async function searchCoins(query, page = 0, pageSize = 20) {
+  const from = page * pageSize
+  const to = from + pageSize - 1
+  const { data, error, count } = await supabase
     .from('user_coins')
-    .select('*')
+    .select('*', { count: 'exact' })
     .or(`coin_name.ilike.%${query}%,country.ilike.%${query}%`)
     .order('created_at', { ascending: false })
+    .range(from, to)
   if (error) throw error
-  return data
+  return { data, count, hasMore: to < (count ?? 0) - 1 }
 }
 
-export async function getCollections() {
-  const { data, error } = await supabase
+export async function getCollections(page = 0, pageSize = 20) {
+  const from = page * pageSize
+  const to = from + pageSize - 1
+  const { data, error, count } = await supabase
     .from('collections')
-    .select('*')
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
+    .range(from, to)
   if (error) throw error
-  return data
+  return { data, count, hasMore: to < (count ?? 0) - 1 }
 }
 
 export async function createCollection(name, description = '', isPublic = false) {

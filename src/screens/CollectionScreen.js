@@ -160,7 +160,7 @@ export default function CollectionScreen({ navigation }) {
       {
         text: 'Remove', style: 'destructive', onPress: async () => {
           try {
-            await deleteCoin(item.id);
+            await deleteCoin(item.id, user?.id);
             dispatch(removeFromCollection(item.id));
             const remaining = collection.filter(c => c.id !== item.id);
             await saveCollection(remaining);

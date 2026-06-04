@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { logger } from '../utils/logger';
 
 /** Convert a Supabase row → Redux collection item shape */
 function rowToItem(row) {
@@ -55,7 +56,7 @@ export async function fetchUserCoins(userId) {
     .order('date_added', { ascending: false });
 
   if (error) {
-    console.warn('fetchUserCoins error:', error.message);
+    logger.warn('fetchUserCoins error:', error.message);
     return [];
   }
   return (data ?? []).map(rowToItem);
@@ -66,16 +67,17 @@ export async function upsertCoin(userId, item) {
   const { error } = await supabase
     .from('user_coins')
     .upsert(itemToRow(userId, item), { onConflict: 'id' });
-  if (error) console.warn('upsertCoin error:', error.message);
+  if (error) logger.warn('upsertCoin error:', error.message);
 }
 
-/** Delete a single collection item by its local id. */
-export async function deleteCoin(itemId) {
+/** Delete a single collection item. Requires userId to prevent IDOR. */
+export async function deleteCoin(itemId, userId) {
   const { error } = await supabase
     .from('user_coins')
     .delete()
-    .eq('id', itemId);
-  if (error) console.warn('deleteCoin error:', error.message);
+    .eq('id', itemId)
+    .eq('user_id', userId);
+  if (error) logger.warn('deleteCoin error:', error.message);
 }
 
 /** Delete ALL coins for a user (called on logout / account deletion). */
@@ -84,5 +86,5 @@ export async function deleteAllUserCoins(userId) {
     .from('user_coins')
     .delete()
     .eq('user_id', userId);
-  if (error) console.warn('deleteAllUserCoins error:', error.message);
+  if (error) logger.warn('deleteAllUserCoins error:', error.message);
 }

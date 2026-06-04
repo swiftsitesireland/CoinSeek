@@ -16,6 +16,7 @@ import {
   fetchUserCoins, upsertCoin, mergeCollections,
 } from '../services/collectionService';
 import { loadCollection, saveCollection } from '../services/storage';
+import { logger } from '../utils/logger';
 
 export function useCollectionSync() {
   const dispatch = useDispatch();
@@ -56,7 +57,7 @@ export function useCollectionSync() {
         await saveCollection(merged);
       } catch (e) {
         // Cache already painted in step 1, so nothing is lost on failure.
-        if (!cancelled) console.warn('useCollectionSync error:', e.message);
+        if (!cancelled) logger.warn('useCollectionSync error:', e.message);
       }
     })();
 

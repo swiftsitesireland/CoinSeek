@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '../utils/logger';
 
 const KEYS = {
   COLLECTION: '@coin_collector/collection',
@@ -42,7 +43,7 @@ export async function saveCollection(collection) {
   try {
     await AsyncStorage.setItem(KEYS.COLLECTION, JSON.stringify(collection));
   } catch (e) {
-    console.error('Failed to save collection:', e);
+    logger.error('Failed to save collection:', e);
   }
 }
 
@@ -53,7 +54,7 @@ export async function loadCollection() {
     const parsed = safeParseArray(data);
     return parsed.filter(isValidCollectionItem); // strip any malformed items
   } catch (e) {
-    console.error('Failed to load collection:', e);
+    logger.error('Failed to load collection:', e);
     return [];
   }
 }
@@ -62,7 +63,7 @@ export async function saveHistory(history) {
   try {
     await AsyncStorage.setItem(KEYS.HISTORY, JSON.stringify(history));
   } catch (e) {
-    console.error('Failed to save history:', e);
+    logger.error('Failed to save history:', e);
   }
 }
 
@@ -71,7 +72,7 @@ export async function loadHistory() {
     const data = await AsyncStorage.getItem(KEYS.HISTORY);
     return data ? safeParseArray(data) : [];
   } catch (e) {
-    console.error('Failed to load history:', e);
+    logger.error('Failed to load history:', e);
     return [];
   }
 }
@@ -80,7 +81,7 @@ export async function saveFavourites(ids) {
   try {
     await AsyncStorage.setItem(KEYS.FAVOURITES, JSON.stringify(ids));
   } catch (e) {
-    console.error('Failed to save favourites:', e);
+    logger.error('Failed to save favourites:', e);
   }
 }
 
@@ -90,7 +91,7 @@ export async function loadFavourites() {
     if (!data) return [];
     return safeParseArray(data).filter((id) => typeof id === 'string');
   } catch (e) {
-    console.error('Failed to load favourites:', e);
+    logger.error('Failed to load favourites:', e);
     return [];
   }
 }
@@ -99,7 +100,7 @@ export async function saveSettings(settings) {
   try {
     await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
   } catch (e) {
-    console.error('Failed to save settings:', e);
+    logger.error('Failed to save settings:', e);
   }
 }
 
@@ -108,7 +109,7 @@ export async function loadSettings() {
     const data = await AsyncStorage.getItem(KEYS.SETTINGS);
     return data ? safeParseObject(data) : null;
   } catch (e) {
-    console.error('Failed to load settings:', e);
+    logger.error('Failed to load settings:', e);
     return null;
   }
 }
@@ -117,6 +118,6 @@ export async function clearAllData() {
   try {
     await AsyncStorage.multiRemove(Object.values(KEYS));
   } catch (e) {
-    console.error('Failed to clear data:', e);
+    logger.error('Failed to clear data:', e);
   }
 }

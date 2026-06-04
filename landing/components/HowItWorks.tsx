@@ -22,7 +22,7 @@ export default function HowItWorks() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-8 justify-center">
           <div className="flex-1 h-px bg-[rgba(255,184,0,0.08)]" />
-          <span className="font-mono text-[10px] text-[rgba(255,184,0,0.5)] tracking-[2px]">
+          <span className="font-mono text-[10px] text-[rgba(255,184,0,0.7)] tracking-[2px]">
             // HOW IT WORKS
           </span>
           <div className="flex-1 h-px bg-[rgba(255,184,0,0.08)]" />

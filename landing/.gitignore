@@ -1,3 +1,12 @@
 .next/
 node_modules/
-.env.local
+.vercel
+
+# All env files except the example template
+.env
+.env.*
+!.env.example
+
+*.log
+coverage/
+.nyc_output

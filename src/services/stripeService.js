@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { logger } from '../utils/logger';
 
 /**
  * Creates a Stripe Checkout Session via the Supabase Edge Function.
@@ -40,7 +41,7 @@ export async function fetchSubscription(userId) {
     .eq('user_id', userId)
     .maybeSingle();
   if (error) {
-    console.warn('fetchSubscription error:', error.message);
+    logger.warn('fetchSubscription error:', error.message);
     return null;
   }
   return data;
@@ -75,7 +76,7 @@ export async function fetchProfile(userId) {
     .eq('id', userId)
     .maybeSingle();
   if (error) {
-    console.warn('fetchProfile error:', error.message);
+    logger.warn('fetchProfile error:', error.message);
     return null;
   }
   return data;

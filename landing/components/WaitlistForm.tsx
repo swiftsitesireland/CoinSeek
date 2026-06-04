@@ -18,6 +18,14 @@ export default function WaitlistForm({ buttonText = '→ JOIN WAITLIST' }: Props
     setStatus('loading')
     setErrorMsg('')
 
+    const form = e.currentTarget as HTMLFormElement
+    const honeypot = (form.elements.namedItem('website') as HTMLInputElement)?.value
+    if (honeypot) {
+      // Bot detected — silently succeed
+      setStatus('success')
+      return
+    }
+
     const res = await fetch('/api/waitlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -44,6 +52,16 @@ export default function WaitlistForm({ buttonText = '→ JOIN WAITLIST' }: Props
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full max-w-sm">
+      {/* Honeypot — hidden from real users, bots fill it in */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
+      />
+
       <div className="flex border border-[rgba(255,184,0,0.2)] rounded-[3px] overflow-hidden">
         <input
           type="email"
@@ -51,6 +69,7 @@ export default function WaitlistForm({ buttonText = '→ JOIN WAITLIST' }: Props
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
           required
+          maxLength={254}
           className="bg-[rgba(255,184,0,0.02)] border-none text-[#ccc] font-mono text-sm px-4 py-3 outline-none flex-1 placeholder:text-[#555] min-w-0"
         />
         <button

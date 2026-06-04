@@ -17,7 +17,7 @@ import { upsertCoin, deleteCoin } from '../../services/collectionService';
 
 // Pending work maps: itemId → { type, userId, item? }
 const pendingUpserts = new Map(); // itemId → { userId, item }
-const pendingDeletes = new Set(); // itemId
+const pendingDeletes = new Map(); // itemId → userId
 
 let flushTimer = null;
 
@@ -26,7 +26,7 @@ async function flushPending() {
 
   // Snapshot and clear so new actions during the flush don't get lost
   const upserts = new Map(pendingUpserts);
-  const deletes = new Set(pendingDeletes);
+  const deletes = new Map(pendingDeletes);
   pendingUpserts.clear();
   pendingDeletes.clear();
 
@@ -35,9 +35,9 @@ async function flushPending() {
     upsertCoin(userId, item).catch(e => logger.warn('collectionSync upsert failed:', e.message)),
   );
 
-  // Fire all deletes concurrently
-  const deletePromises = [...deletes].map(itemId =>
-    deleteCoin(itemId).catch(e => logger.warn('collectionSync delete failed:', e.message)),
+  // Fire all deletes concurrently — pass userId so the query filters by owner
+  const deletePromises = [...deletes.entries()].map(([itemId, uid]) =>
+    deleteCoin(itemId, uid).catch(e => logger.warn('collectionSync delete failed:', e.message)),
   );
 
   await Promise.all([...upsertPromises, ...deletePromises]);
@@ -89,7 +89,7 @@ export const collectionSyncMiddleware = store => next => action => {
         const itemId = action.payload;
         // If there's a pending upsert for this item, cancel it
         pendingUpserts.delete(itemId);
-        pendingDeletes.add(itemId);
+        pendingDeletes.set(itemId, userId);
         scheduleFlush();
       }
     } catch (e) {

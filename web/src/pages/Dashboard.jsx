@@ -6,10 +6,16 @@ import { getCoinsByUserId, deleteCoin, searchCoins } from '../services/coinServi
 import CoinGrid from '../components/CoinGrid'
 import AddCoinModal from '../components/AddCoinModal'
 
+const PAGE_SIZE = 20
+
 export default function Dashboard() {
   const { profile } = useAuth()
   const [coins, setCoins] = useState([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [page, setPage] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
   const [view, setView] = useState('grid')
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
@@ -17,15 +23,38 @@ export default function Dashboard() {
   const [loggingOut, setLoggingOut] = useState(false)
 
   const loadCoins = useCallback(async () => {
+    setLoading(true)
+    setPage(0)
     try {
-      const data = search.trim() ? await searchCoins(search.trim()) : await getCoinsByUserId()
-      setCoins(data)
+      const result = search.trim()
+        ? await searchCoins(search.trim(), 0, PAGE_SIZE)
+        : await getCoinsByUserId(0, PAGE_SIZE)
+      setCoins(result.data)
+      setHasMore(result.hasMore)
+      setTotalCount(result.count ?? 0)
     } catch {
       toast.error('Failed to load coins')
     } finally {
       setLoading(false)
     }
   }, [search])
+
+  async function loadMore() {
+    const nextPage = page + 1
+    setLoadingMore(true)
+    try {
+      const result = search.trim()
+        ? await searchCoins(search.trim(), nextPage, PAGE_SIZE)
+        : await getCoinsByUserId(nextPage, PAGE_SIZE)
+      setCoins(prev => [...prev, ...result.data])
+      setHasMore(result.hasMore)
+      setPage(nextPage)
+    } catch {
+      toast.error('Failed to load more coins')
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   useEffect(() => {
     const timer = setTimeout(loadCoins, search ? 300 : 0)
@@ -77,6 +106,7 @@ export default function Dashboard() {
   const totalValue = coins.reduce((sum, c) => sum + (parseFloat(c.market_value_mid) || 0), 0)
   const countriesCount = new Set(coins.map(c => c.country).filter(Boolean)).size
   const rareCount = coins.filter(c => ['rare', 'very_rare', 'legendary'].includes(c.rarity_level)).length
+  const displayTotal = search.trim() ? coins.length : totalCount
   const initials = profile?.username?.slice(0, 2).toUpperCase() ?? '?'
 
   return (
@@ -110,7 +140,7 @@ export default function Dashboard() {
         <div className="stats-row">
           <div className="stat-card">
             <div className="label">Total Coins</div>
-            <div className="value">{coins.length}</div>
+            <div className="value">{displayTotal}</div>
             <div className="subtitle">in your collection</div>
           </div>
           <div className="stat-card">
@@ -155,7 +185,21 @@ export default function Dashboard() {
             <div className="spinner spinner-lg" />
           </div>
         ) : (
-          <CoinGrid coins={coins} view={view} onEdit={handleEdit} onDelete={handleDelete} />
+          <>
+            <CoinGrid coins={coins} view={view} onEdit={handleEdit} onDelete={handleDelete} />
+            {hasMore && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+                <button
+                  className="btn btn-secondary"
+                  style={{ width: 'auto', minWidth: 160 }}
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? <><div className="spinner" /> Loading...</> : `Load more (${totalCount - coins.length} remaining)`}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </main>
 

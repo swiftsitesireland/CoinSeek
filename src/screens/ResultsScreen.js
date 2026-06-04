@@ -7,6 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useDispatch, useSelector, useStore } from 'react-redux';
+import { logger } from '../utils/logger';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { selectCollection, addToCollection, selectIsFavourite, toggleFavourite } from '../store/slices/collectionSlice';
 import { selectCurrency } from '../store/slices/settingsSlice';
@@ -140,7 +141,7 @@ export default function ResultsScreen({ navigation, route }) {
       newBadges.forEach((id) => dispatch(addEarnedBadge(id)));
       fireXPToast(xpResult.xp_earned, xpResult.new_total, xpResult.level_after, newBadges[0] ?? null);
     } catch (e) {
-      console.warn('handleAwardXP error:', e.message);
+      logger.warn('handleAwardXP error:', e.message);
     }
   }, [dispatch, collection, earnedBadges]);
 

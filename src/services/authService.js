@@ -105,7 +105,11 @@ function isSafeAvatarUrl(url) {
   }
 }
 
-export async function updateProfile(userId, updates) {
+export async function updateProfile(updates) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) throw new Error('Not authenticated');
+  const userId = session.user.id;
+
   const ALLOWED_FIELDS = ['username', 'display_name', 'avatar_url'];
   const safe = Object.fromEntries(
     Object.entries(updates).filter(([k]) => ALLOWED_FIELDS.includes(k))

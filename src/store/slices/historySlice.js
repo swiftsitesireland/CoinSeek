@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import * as Crypto from 'expo-crypto';
 
 const historySlice = createSlice({
   name: 'history',
@@ -11,7 +12,7 @@ const historySlice = createSlice({
     },
     addScan(state, action) {
       const entry = {
-        id: Date.now().toString(),
+        id: Crypto.randomUUID(),
         ...action.payload,
         scannedAt: new Date().toISOString(),
       };

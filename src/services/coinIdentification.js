@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import * as Crypto from 'expo-crypto';
 import { supabase } from '../config/supabase';
 import { logger } from '../utils/logger';
 
@@ -82,10 +83,7 @@ export async function identifyCoin(frontUri, backUri) {
 
     const validated = validateCoin(data.coin);
     const coin = {
-      // React Native (Hermes) has no global `crypto`, so crypto.randomUUID()
-      // throws. This id is only a local history key, not security-sensitive, so
-      // a timestamp + random suffix is sufficient and dependency-free.
-      id: `ai_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`,
+      id: Crypto.randomUUID(),
       imageUrl: null,
       ...validated,
     };

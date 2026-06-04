@@ -22,7 +22,7 @@ export default function Features() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-8 justify-center">
           <div className="flex-1 h-px bg-[rgba(255,184,0,0.08)]" />
-          <span className="font-mono text-[10px] text-[rgba(255,184,0,0.5)] tracking-[2px]">
+          <span className="font-mono text-[10px] text-[rgba(255,184,0,0.7)] tracking-[2px]">
             // FEATURES
           </span>
           <div className="flex-1 h-px bg-[rgba(255,184,0,0.08)]" />
@@ -30,7 +30,7 @@ export default function Features() {
         <div className="grid grid-cols-3 gap-px bg-[rgba(255,184,0,0.08)] border border-[rgba(255,184,0,0.08)] rounded overflow-hidden max-md:grid-cols-1">
           {FEATURES.map((f) => (
             <div key={f.num} className="bg-[#0d0d0d] px-5 py-6 text-center flex flex-col items-center">
-              <p className="font-mono text-[10px] text-[rgba(255,184,0,0.3)] mb-3 tracking-[1px]">
+              <p className="font-mono text-[10px] text-[rgba(255,184,0,0.6)] mb-3 tracking-[1px]">
                 {f.num} //
               </p>
               <h3 className="text-[15px] font-bold text-white mb-2 tracking-[-0.3px]">

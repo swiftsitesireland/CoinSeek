@@ -8,6 +8,7 @@ import {
   selectBadges, selectChallenges, selectLeaderboard, selectGamLoading,
 } from '../store/slices/gamificationSlice';
 import { fetchGamificationData, fetchLeaderboard } from '../services/gamificationService';
+import { logger } from '../utils/logger';
 
 export function useGamification() {
   const { user }   = useAuth();
@@ -33,7 +34,7 @@ export function useGamification() {
       dispatch(setGamification(gamData));
       dispatch(setLeaderboard(board));
     } catch (e) {
-      console.warn('useGamification fetch error:', e.message);
+      logger.warn('useGamification fetch error:', e.message);
     } finally {
       dispatch(setLoading(false));
     }

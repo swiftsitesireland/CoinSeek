@@ -3,6 +3,33 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { login, resetPassword } from '../services/authService'
 
+const RATE_KEY = 'login_attempts'
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 15 * 60 * 1000
+
+function getRateState() {
+  try {
+    return JSON.parse(localStorage.getItem(RATE_KEY) || 'null')
+  } catch { return null }
+}
+
+function isRateLimited() {
+  const state = getRateState()
+  if (!state) return false
+  if (Date.now() > state.resetAt) { localStorage.removeItem(RATE_KEY); return false }
+  return state.count >= MAX_ATTEMPTS
+}
+
+function recordAttempt() {
+  const now = Date.now()
+  const state = getRateState()
+  if (!state || now > state.resetAt) {
+    localStorage.setItem(RATE_KEY, JSON.stringify({ count: 1, resetAt: now + WINDOW_MS }))
+  } else {
+    localStorage.setItem(RATE_KEY, JSON.stringify({ ...state, count: state.count + 1 }))
+  }
+}
+
 function getErrorMessage(err) {
   const msg = err.message?.toLowerCase() ?? ''
   if (msg.includes('invalid login') || msg.includes('invalid credentials')) return 'Invalid email or password'
@@ -24,21 +51,30 @@ export default function Login() {
 
   function validate() {
     const errs = {}
-    if (!formData.email) errs.email = 'Email is required'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = 'Invalid email address'
+    const email = formData.email.trim()
+    if (!email) errs.email = 'Email is required'
+    else if (email.length > 254) errs.email = 'Email is too long'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Invalid email address'
     if (!formData.password) errs.password = 'Password is required'
+    else if (formData.password.length > 128) errs.password = 'Password is too long'
     return errs
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (isRateLimited()) {
+      setError('Too many login attempts. Please wait 15 minutes and try again.')
+      return
+    }
     const errs = validate()
     setErrors(errs)
     if (Object.keys(errs).length > 0) return
     setLoading(true)
     setError('')
     try {
-      await login(formData.email, formData.password)
+      recordAttempt()
+      await login(formData.email.trim(), formData.password)
+      localStorage.removeItem(RATE_KEY)
       navigate('/dashboard')
     } catch (err) {
       setError(getErrorMessage(err))
@@ -90,6 +126,7 @@ export default function Login() {
               value={formData.email}
               onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
               autoComplete="email"
+              maxLength={254}
             />
             {errors.email && <div className="field-error">{errors.email}</div>}
           </div>
@@ -103,6 +140,7 @@ export default function Login() {
               value={formData.password}
               onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
               autoComplete="current-password"
+              maxLength={128}
             />
             {errors.password && <div className="field-error">{errors.password}</div>}
           </div>

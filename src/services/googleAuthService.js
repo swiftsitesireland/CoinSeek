@@ -1,4 +1,3 @@
-import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import * as SecureStore from 'expo-secure-store';
 import { supabase } from '../config/supabase';
@@ -18,8 +17,9 @@ WebBrowser.maybeCompleteAuthSession();
  *   { success: false }                     — user cancelled or error thrown
  */
 export async function signInWithGoogle() {
-  // coinseek://auth-callback — matches the allowlist entry in Supabase dashboard
-  const redirectTo = Linking.createURL('/auth-callback');
+  // HTTPS App Link / Universal Link — custom schemes (coinseek://) can be
+  // registered by any app on Android and are unsafe for carrying auth tokens.
+  const redirectTo = 'https://coinseek.app/auth/callback';
 
   // Ask Supabase for the Google OAuth URL.
   // skipBrowserRedirect: true — we open the browser ourselves so we can

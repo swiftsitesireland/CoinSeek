@@ -3,6 +3,31 @@ import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { signup, checkUsernameAvailable } from '../services/authService'
 
+const RATE_KEY = 'signup_attempts'
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 15 * 60 * 1000
+
+function getRateState() {
+  try { return JSON.parse(localStorage.getItem(RATE_KEY) || 'null') } catch { return null }
+}
+
+function isRateLimited() {
+  const state = getRateState()
+  if (!state) return false
+  if (Date.now() > state.resetAt) { localStorage.removeItem(RATE_KEY); return false }
+  return state.count >= MAX_ATTEMPTS
+}
+
+function recordAttempt() {
+  const now = Date.now()
+  const state = getRateState()
+  if (!state || now > state.resetAt) {
+    localStorage.setItem(RATE_KEY, JSON.stringify({ count: 1, resetAt: now + WINDOW_MS }))
+  } else {
+    localStorage.setItem(RATE_KEY, JSON.stringify({ ...state, count: state.count + 1 }))
+  }
+}
+
 function getPasswordStrength(password) {
   const checks = {
     length:    password.length >= 8,
@@ -48,8 +73,10 @@ export default function Signup() {
 
   function validate() {
     const errs = {}
-    if (!formData.email) errs.email = 'Email is required'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errs.email = 'Invalid email address'
+    const email = formData.email.trim()
+    if (!email) errs.email = 'Email is required'
+    else if (email.length > 254) errs.email = 'Email is too long'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Invalid email address'
 
     if (!formData.username) errs.username = 'Username is required'
     else if (formData.username.length < 3) errs.username = 'At least 3 characters required'
@@ -58,6 +85,7 @@ export default function Signup() {
     else if (usernameStatus === 'taken') errs.username = 'Username already taken'
 
     if (!formData.password) errs.password = 'Password is required'
+    else if (formData.password.length > 128) errs.password = 'Password is too long'
     else if (score < 3) errs.password = 'Password is too weak — meet at least 3 requirements'
 
     if (!formData.confirmPassword) errs.confirmPassword = 'Please confirm your password'
@@ -68,13 +96,19 @@ export default function Signup() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    if (isRateLimited()) {
+      setError('Too many sign-up attempts. Please wait 15 minutes and try again.')
+      return
+    }
     const errs = validate()
     setErrors(errs)
     if (Object.keys(errs).length > 0) return
     setLoading(true)
     setError('')
     try {
-      await signup(formData.email, formData.password, formData.username.trim())
+      recordAttempt()
+      await signup(formData.email.trim(), formData.password, formData.username.trim())
+      localStorage.removeItem(RATE_KEY)
       toast.success('Account created! Check your email to verify, then log in.')
       navigate('/login')
     } catch (err) {
@@ -111,6 +145,7 @@ export default function Signup() {
               value={formData.email}
               onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
               autoComplete="email"
+              maxLength={254}
             />
             {errors.email && <div className="field-error">{errors.email}</div>}
           </div>
@@ -125,6 +160,7 @@ export default function Signup() {
               onChange={e => { setFormData(p => ({ ...p, username: e.target.value })); setUsernameStatus(null) }}
               onBlur={handleUsernameBlur}
               autoComplete="username"
+              maxLength={30}
             />
             {usernameStatus === 'checking' && <div className="field-success">Checking availability…</div>}
             {usernameStatus === 'available' && !errors.username && <div className="field-success">✓ Username available</div>}
@@ -141,6 +177,7 @@ export default function Signup() {
               value={formData.password}
               onChange={e => setFormData(p => ({ ...p, password: e.target.value }))}
               autoComplete="new-password"
+              maxLength={128}
             />
             {formData.password && (
               <div className="password-strength">

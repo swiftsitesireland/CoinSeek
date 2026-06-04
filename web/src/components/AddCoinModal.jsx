@@ -59,10 +59,21 @@ export default function AddCoinModal({ coin, onSave, onClose }) {
   function validate() {
     const errs = {}
     if (!form.coin_name.trim()) errs.coin_name = 'Coin name is required'
+    else if (form.coin_name.length > 100) errs.coin_name = 'Must be 100 characters or fewer'
     if (!form.country.trim()) errs.country = 'Country is required'
+    else if (form.country.length > 100) errs.country = 'Must be 100 characters or fewer'
     if (form.year_minted) {
       const y = parseInt(form.year_minted)
       if (isNaN(y) || y < 1 || y > new Date().getFullYear() + 1) errs.year_minted = 'Invalid year'
+    }
+    if (form.denomination && form.denomination.length > 50) errs.denomination = 'Must be 50 characters or fewer'
+    if (form.metal_composition && form.metal_composition.length > 100) errs.metal_composition = 'Must be 100 characters or fewer'
+    if (form.mint_mark && form.mint_mark.length > 10) errs.mint_mark = 'Must be 10 characters or fewer'
+    if (form.weight && form.weight.length > 20) errs.weight = 'Must be 20 characters or fewer'
+    if (form.notes && form.notes.length > 1000) errs.notes = 'Must be 1000 characters or fewer'
+    if (form.photo_url) {
+      try { new URL(form.photo_url) } catch { errs.photo_url = 'Must be a valid URL' }
+      if (form.photo_url.length > 500) errs.photo_url = 'URL is too long'
     }
     return errs
   }
@@ -109,6 +120,7 @@ export default function AddCoinModal({ coin, onSave, onClose }) {
                   placeholder="e.g. Morgan Dollar"
                   value={form.coin_name}
                   onChange={e => set('coin_name', e.target.value)}
+                  maxLength={100}
                 />
                 {errors.coin_name && <div className="field-error">{errors.coin_name}</div>}
               </div>
@@ -119,6 +131,7 @@ export default function AddCoinModal({ coin, onSave, onClose }) {
                   placeholder="e.g. United States"
                   value={form.country}
                   onChange={e => set('country', e.target.value)}
+                  maxLength={100}
                 />
                 {errors.country && <div className="field-error">{errors.country}</div>}
               </div>
@@ -137,7 +150,8 @@ export default function AddCoinModal({ coin, onSave, onClose }) {
               </div>
               <div className="form-group">
                 <label>Denomination</label>
-                <input className="form-input" placeholder="e.g. $1, 1 Penny" value={form.denomination} onChange={e => set('denomination', e.target.value)} />
+                <input className="form-input" placeholder="e.g. $1, 1 Penny" value={form.denomination} onChange={e => set('denomination', e.target.value)} maxLength={50} />
+                {errors.denomination && <div className="field-error">{errors.denomination}</div>}
               </div>
             </div>
 
@@ -162,22 +176,26 @@ export default function AddCoinModal({ coin, onSave, onClose }) {
             <div className="form-row">
               <div className="form-group">
                 <label>Metal Composition</label>
-                <input className="form-input" placeholder="e.g. 90% Silver, 10% Copper" value={form.metal_composition} onChange={e => set('metal_composition', e.target.value)} />
+                <input className="form-input" placeholder="e.g. 90% Silver, 10% Copper" value={form.metal_composition} onChange={e => set('metal_composition', e.target.value)} maxLength={100} />
+                {errors.metal_composition && <div className="field-error">{errors.metal_composition}</div>}
               </div>
               <div className="form-group">
                 <label>Mint Mark</label>
-                <input className="form-input" placeholder="e.g. S, D, CC" value={form.mint_mark} onChange={e => set('mint_mark', e.target.value)} />
+                <input className="form-input" placeholder="e.g. S, D, CC" value={form.mint_mark} onChange={e => set('mint_mark', e.target.value)} maxLength={10} />
+                {errors.mint_mark && <div className="field-error">{errors.mint_mark}</div>}
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label>Weight</label>
-                <input className="form-input" placeholder="e.g. 26.73g" value={form.weight} onChange={e => set('weight', e.target.value)} />
+                <input className="form-input" placeholder="e.g. 26.73g" value={form.weight} onChange={e => set('weight', e.target.value)} maxLength={20} />
+                {errors.weight && <div className="field-error">{errors.weight}</div>}
               </div>
               <div className="form-group">
                 <label>Photo URL</label>
-                <input className="form-input" type="url" placeholder="https://..." value={form.photo_url} onChange={e => set('photo_url', e.target.value)} />
+                <input className="form-input" type="url" placeholder="https://..." value={form.photo_url} onChange={e => set('photo_url', e.target.value)} maxLength={500} />
+                {errors.photo_url && <div className="field-error">{errors.photo_url}</div>}
               </div>
             </div>
 
@@ -213,7 +231,8 @@ export default function AddCoinModal({ coin, onSave, onClose }) {
 
             <div className="form-group">
               <label>Notes</label>
-              <textarea className="form-textarea" placeholder="Any additional details about this coin..." value={form.notes} onChange={e => set('notes', e.target.value)} />
+              <textarea className="form-textarea" placeholder="Any additional details about this coin..." value={form.notes} onChange={e => set('notes', e.target.value)} maxLength={1000} />
+              {errors.notes && <div className="field-error">{errors.notes}</div>}
             </div>
           </div>
 

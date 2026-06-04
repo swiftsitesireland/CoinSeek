@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { LEVEL_TITLES } from '../store/slices/gamificationSlice';
+import { logger } from '../utils/logger';
 
 const EU_COUNTRIES = new Set(['Germany','France','Italy','Spain','Netherlands','Belgium','Austria','Portugal','Greece','Finland','Ireland','Luxembourg']);
 
@@ -15,7 +16,7 @@ export async function awardXP(action, metadata = {}) {
 export async function awardBadge(badgeId) {
   const { data, error } = await supabase.rpc('award_badge', { p_badge_id: badgeId });
   if (error) {
-    console.warn('awardBadge error:', error.message);
+    logger.warn('awardBadge error:', error.message);
     return { newly_earned: false };
   }
   return data; // { badge_id, newly_earned }
@@ -28,9 +29,9 @@ export async function fetchGamificationData(userId) {
     supabase.from('user_challenges').select('challenge_id, progress, completed_at').eq('user_id', userId),
   ]);
 
-  if (xpRes.error) console.warn('fetchGamificationData xp error:', xpRes.error.message);
-  if (badgesRes.error) console.warn('fetchGamificationData badges error:', badgesRes.error.message);
-  if (challengesRes.error) console.warn('fetchGamificationData challenges error:', challengesRes.error.message);
+  if (xpRes.error) logger.warn('fetchGamificationData xp error:', xpRes.error.message);
+  if (badgesRes.error) logger.warn('fetchGamificationData badges error:', badgesRes.error.message);
+  if (challengesRes.error) logger.warn('fetchGamificationData challenges error:', challengesRes.error.message);
 
   const xpRow  = xpRes.data  ?? { total_xp: 0, week_xp: 0, level: 1 };
   const level  = xpRow.level ?? 1;

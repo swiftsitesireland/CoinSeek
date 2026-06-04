@@ -78,7 +78,7 @@ export default function AccountSettingsScreen({ navigation }) {
     dispatch(updateProfile({ name: trimmed }));
     try {
       // display_name is free-form (no uniqueness constraint), safe to update directly.
-      if (user?.id) await updateProfileService(user.id, { display_name: trimmed });
+      await updateProfileService({ display_name: trimmed });
       Toast.show({ type: 'success', text1: 'Name updated' });
     } catch (e) {
       Toast.show({ type: 'error', text1: 'Saved on device', text2: 'Could not sync to the server — will retry later.' });

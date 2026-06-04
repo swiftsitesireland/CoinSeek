@@ -30,6 +30,8 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+import { logger } from '../utils/logger';
+
 let attestationModule = null;
 let initialised = false;
 
@@ -44,12 +46,12 @@ export async function initAppCheck() {
 
   try {
     attestationModule = await import('expo-app-integrity');
-    console.log('[AppCheck] expo-app-integrity loaded');
+    logger.log('[AppCheck] expo-app-integrity loaded');
   } catch {
     // expo-app-integrity not installed yet — expected during development.
     // Everything continues to work; attestation is enforced server-side
     // only when ENFORCE_APP_CHECK=true is set on the edge function.
-    console.log('[AppCheck] expo-app-integrity not available (Expo Go / not installed)');
+    logger.log('[AppCheck] expo-app-integrity not available (Expo Go / not installed)');
   }
 }
 

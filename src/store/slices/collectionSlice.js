@@ -1,9 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
+import * as Crypto from 'expo-crypto';
 
-// React Native (Hermes) has no global `crypto`, so crypto.randomUUID() throws.
-// These ids are local-only keys, not security-sensitive, so a timestamp +
-// random suffix is sufficient and dependency-free.
-const localId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+const localId = () => Crypto.randomUUID();
 
 const collectionSlice = createSlice({
   name: 'collection',

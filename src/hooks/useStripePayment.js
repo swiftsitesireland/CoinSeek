@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { activatePremium } from '../store/slices/settingsSlice';
 import { createCheckoutSession, verifySession } from '../services/stripeService';
 import Toast from 'react-native-toast-message';
+import { logger } from '../utils/logger';
 
 function parseSessionId(url) {
   try {
@@ -53,10 +54,12 @@ export function useStripePayment() {
 
         // Server verifies payment with Stripe and writes to subscriptions table.
         // Premium state on next launch comes from useSubscription (Supabase fetch).
-        await verifySession(sessionId);
+        const verified = await verifySession(sessionId);
 
-        // Optimistic local update for immediate UI feedback in this session only.
-        dispatch(activatePremium());
+        // Only activate locally once the server explicitly confirms success.
+        if (verified?.success) {
+          dispatch(activatePremium());
+        }
 
         Toast.show({
           type: 'success',
@@ -69,7 +72,7 @@ export function useStripePayment() {
 
       return false;
     } catch (e) {
-      console.error('Stripe payment error:', e.message);
+      logger.error('Stripe payment error:', e.message);
       Toast.show({
         type: 'error',
         text1: 'Payment failed',
