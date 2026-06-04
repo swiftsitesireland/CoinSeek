@@ -29,3 +29,4 @@ Thumbs.db
 # Native builds
 android/
 ios/
+.worktrees/
