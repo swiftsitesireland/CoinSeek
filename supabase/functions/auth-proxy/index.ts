@@ -228,10 +228,11 @@ Deno.serve(async (req) => {
         console.warn('[auth-proxy] Validation failed: missing password on signin from IP:', getClientIp(req));
         return json({ error: 'password is required' }, 400);
       }
-      // Fail fast on obviously invalid lengths — prevents unnecessary upstream calls.
-      // bcrypt is slow; hashing a huge string stalls the function even with the body limit.
-      if (password.length < 8 || password.length > MAX_PASSWORD_LEN) {
-        console.warn('[auth-proxy] Validation failed: password length out of range on signin from IP:', getClientIp(req));
+      // Only guard the upper bound — bcrypt is slow and hashing a huge string stalls the
+      // function. The lower bound is intentionally omitted: rejecting short passwords fast
+      // would create a timing oracle (no upstream hop = observable policy leak).
+      if (password.length > MAX_PASSWORD_LEN) {
+        console.warn('[auth-proxy] Validation failed: oversized password on signin from IP:', getClientIp(req));
         return json({ error: 'Invalid email or password' }, 401);
       }
 
