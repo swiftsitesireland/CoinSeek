@@ -38,7 +38,7 @@ export default function Hero() {
 
         {/* Form */}
         <WaitlistForm buttonText="→ JOIN WAITLIST" />
-        <p className="font-mono text-[9px] text-[#666] tracking-[0.5px] mt-3">No spam, ever.</p>
+        <p className="font-mono text-[11px] text-[#666] tracking-[0.5px] mt-3">No spam, ever.</p>
 
 
       </div>
