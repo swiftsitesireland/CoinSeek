@@ -6,7 +6,7 @@ export default function Nav() {
           COIN//COLLECTOR
         </span>
         <span className="border border-[rgba(255,184,0,0.3)] text-[#FFB800] font-mono text-[9px] px-2.5 py-1 rounded-[2px] tracking-[1px]">
-          BETA SOON
+          COMING SOON
         </span>
       </div>
     </nav>

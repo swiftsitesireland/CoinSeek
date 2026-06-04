@@ -19,7 +19,7 @@ export default function Hero() {
         {/* Badge */}
         <div className="flex items-center gap-2 mb-8 border border-[rgba(255,184,0,0.15)] rounded-full px-4 py-1.5 bg-[rgba(255,184,0,0.03)]">
           <div className="w-1.5 h-1.5 rounded-full bg-[#FFB800]" />
-          <span className="font-mono text-[9px] text-[rgba(255,184,0,0.6)] tracking-[2px]">BETA GOES LIVE SOON</span>
+          <span className="font-mono text-[9px] text-[rgba(255,184,0,0.6)] tracking-[2px]">COMING SOON</span>
         </div>
 
         {/* Headline */}
