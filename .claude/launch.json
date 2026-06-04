@@ -32,5 +32,12 @@
       "runtimeArgs": ["run", "dev", "--prefix", "web"],
       "port": 5173
     }
+  ,
+    {
+      "name": "landing",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "landing"],
+      "port": 3000
+    }
   ]
 }
