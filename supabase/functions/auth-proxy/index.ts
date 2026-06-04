@@ -12,7 +12,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { checkRateLimit, rateLimitResponse } from '../_shared/rateLimiter.ts';
 import {
   readBodyWithLimit, safeParseJson, buildCorsHeaders, sanitiseEmail,
-  rejectUnexpectedFields, requirePost, LIMITS,
+  rejectUnexpectedFields, requirePost, validatePassword, LIMITS,
 } from '../_shared/validate.ts';
 
 // Max password length — prevents bcrypt DoS if the body-size limit ever changes.
@@ -228,8 +228,9 @@ Deno.serve(async (req) => {
         console.warn('[auth-proxy] Validation failed: missing password on signin from IP:', getClientIp(req));
         return json({ error: 'password is required' }, 400);
       }
-      // Cap password length — bcrypt is intentionally slow and hashing a huge
-      // string could stall the function even with the body size limit in place.
+      // Only guard the upper bound — bcrypt is slow and hashing a huge string stalls the
+      // function. The lower bound is intentionally omitted: rejecting short passwords fast
+      // would create a timing oracle (no upstream hop = observable policy leak).
       if (password.length > MAX_PASSWORD_LEN) {
         console.warn('[auth-proxy] Validation failed: oversized password on signin from IP:', getClientIp(req));
         return json({ error: 'Invalid email or password' }, 401);
@@ -253,22 +254,11 @@ Deno.serve(async (req) => {
 
     // ── Sign up ───────────────────────────────────────────────────────────────
     if (action === 'signup') {
-      if (!password || typeof password !== 'string') {
-        console.warn('[auth-proxy] Validation failed: missing password on signup from IP:', getClientIp(req));
-        return json({ error: 'password is required' }, 400);
-      }
-      // VULN-12: enforce 8–128 character range + complexity
-      if (password.length > MAX_PASSWORD_LEN) {
-        console.warn('[auth-proxy] Validation failed: oversized password on signup from IP:', getClientIp(req));
-        return json({ error: `Password must be at most ${MAX_PASSWORD_LEN} characters` }, 400);
-      }
-      if (password.length < 8) {
-        console.warn('[auth-proxy] Validation failed: password too short on signup from IP:', getClientIp(req));
-        return json({ error: 'Password must be at least 8 characters' }, 400);
-      }
-      if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
-        console.warn('[auth-proxy] Validation failed: password complexity on signup from IP:', getClientIp(req));
-        return json({ error: 'Password must contain at least one letter and one number' }, 400);
+      // VULN-12: enforce 8–128 character range + complexity via shared validator
+      const pwErr = validatePassword(password);
+      if (pwErr) {
+        console.warn('[auth-proxy] Validation failed: password validation on signup from IP:', getClientIp(req));
+        return json({ error: pwErr }, 400);
       }
 
       // Block vulgar / racist / sexist / inappropriate display names.
