@@ -14,10 +14,28 @@ const dmMono = DM_Mono({
   variable: '--font-dm-mono',
 })
 
+const SITE_URL = 'https://coin-seek-tau.vercel.app'
+
 export const metadata: Metadata = {
   title: 'Coin Collector — Identify Any Coin Instantly',
   description:
     'AI-powered coin identification. Point your camera at any coin and instantly know its name, rarity, and market value. Join the waitlist.',
+  metadataBase: new URL(SITE_URL),
+  icons: { icon: '/favicon.svg' },
+  openGraph: {
+    title: 'Coin Collector — Identify Any Coin Instantly',
+    description:
+      'AI-powered coin identification. Point your camera at any coin and instantly know its name, rarity, and market value. Join the waitlist.',
+    url: SITE_URL,
+    siteName: 'Coin Collector',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Coin Collector — Identify Any Coin Instantly',
+    description:
+      'AI-powered coin identification. Point your camera at any coin and instantly know its name, rarity, and market value. Join the waitlist.',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
