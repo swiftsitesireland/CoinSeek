@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description:
     'AI-powered coin identification. Point your camera at any coin and instantly know its name, rarity, and market value. Join the waitlist.',
   metadataBase: new URL(SITE_URL),
-  icons: { icon: '/favicon.svg' },
+  icons: { icon: '/favicon.png' },
   openGraph: {
     title: 'Coin Collector — Identify Any Coin Instantly',
     description:
