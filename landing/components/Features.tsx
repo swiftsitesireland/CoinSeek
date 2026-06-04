@@ -2,7 +2,7 @@ const FEATURES = [
   {
     num: '01',
     title: 'AI Recognition',
-    desc: 'Point your camera at any coin and get instant identification from 15,000+ coins spanning ancient to modern.',
+    desc: 'Point your camera at any coin and get instant AI identification — from ancient Roman denarii to modern mint releases.',
   },
   {
     num: '02',
